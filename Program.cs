@@ -22,13 +22,16 @@ namespace CSharpSerialiser
         public readonly string Name;
         public readonly int Age;
         public readonly bool IsBool;
-        public readonly Vector2 Position;
+        public readonly IReadOnlyList<IReadOnlyList<Vector2>> Positions;
+        public readonly IReadOnlyDictionary<int, Vector2> BonusPositions;
 
-        public Definition(string name, int age, bool isBool, Vector2 position)
+        public Definition(string name, int age, bool isBool, IReadOnlyList<IReadOnlyList<Vector2>> positions, IReadOnlyDictionary<int, Vector2> bonusPositions)
         {
             this.Name = name;
             this.Age = age;
             this.IsBool = isBool;
+            this.Positions = positions;
+            this.BonusPositions = bonusPositions;
         }
     }
 

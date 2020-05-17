@@ -5,7 +5,11 @@ namespace CSharpSerialiser
     public struct ClassName : IEquatable<string>
     {
         #region Fields
+        public static readonly ClassName Empty = new ClassName("<EMPTY>");
+
         public readonly string Value;
+
+        public bool IsEmpty => this.Value == Empty.Value;
         #endregion
 
         #region Constructor

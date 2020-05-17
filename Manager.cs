@@ -28,6 +28,36 @@ namespace CSharpSerialiser
             this.classMap[classObject.FullName] = classObject;
         }
 
+        public static ClassType CreateTypeFromType(Type type)
+        {
+            var containerType = CollectionType.NotACollection;
+            var genericTypes = new List<ClassType>();
+            if (type.IsGenericType)
+            {
+                var genericDef = type.GetGenericTypeDefinition();
+                genericTypes.AddRange(type.GenericTypeArguments.Select(CreateTypeFromType));
+
+                if (genericDef.IsAssignableFrom(typeof(IReadOnlyList<>)))
+                {
+                    containerType = CollectionType.Array;
+                    if (genericTypes.First().CollectionType != CollectionType.NotACollection)
+                    {
+                        containerType = CollectionType.List;
+                    }
+                }
+                else if (genericDef.IsAssignableFrom(typeof(IList<>)))
+                {
+                    containerType = CollectionType.List;
+                }
+                else if (genericDef.IsAssignableFrom(typeof(IReadOnlyDictionary<,>)))
+                {
+                    containerType = CollectionType.Dictionary;
+                }
+            }
+
+            return new ClassType(new ClassName(type.FullName), containerType, genericTypes);
+        }
+
         public static ClassObject CreateObjectFromType(Type type)
         {
             var fields = new List<ClassField>();
@@ -45,7 +75,8 @@ namespace CSharpSerialiser
 
                 if (fieldType != null)
                 {
-                    fields.Add(new ClassField(field.Name, new ClassName(fieldType.FullName)));
+                    var classType = CreateTypeFromType(field.FieldType);
+                    fields.Add(new ClassField(field.Name, classType));
                 }
             }
 
