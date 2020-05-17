@@ -8,7 +8,7 @@ namespace CSharpSerialiser
     public class Manager
     {
         #region Fields
-        public readonly string NameSpace;
+        public readonly IReadOnlyList<string> NameSpace;
 
         private readonly Dictionary<ClassName, ClassObject> classMap = new Dictionary<ClassName, ClassObject>();
 
@@ -16,7 +16,7 @@ namespace CSharpSerialiser
         #endregion
 
         #region Constructor
-        public Manager(string nameSpace)
+        public Manager(IReadOnlyList<string> nameSpace)
         {
             this.NameSpace = nameSpace;
         }

@@ -15,9 +15,9 @@ namespace CSharpSerialiser
                 writer.WriteLine("using System;");
                 writer.WriteLine("using System.IO;\n");
                 writer.WriteLine("using System.Collections.Generic;\n");
-                writer.WriteLine($"namespace {manager.NameSpace}");
+                writer.WriteLine($"namespace {string.Join('.', manager.NameSpace)}");
                 writer.WriteLine("{");
-                writer.WriteLine($"public static partial class {manager.NameSpace.Replace(".", "")}BinarySerialiser");
+                writer.WriteLine($"public static partial class {manager.NameSpace.Last()}BinarySerialiser");
                 writer.WriteLine("{");
                 foreach (var kvp in manager.ClassMap)
                 {
@@ -31,8 +31,7 @@ namespace CSharpSerialiser
 
         private static string MakeWriteMethodName(ClassObject classObject)
         {
-            var fullName = classObject.FullName.Value.Replace(".", "");
-            return $"Write{fullName}";
+            return $"Write";
         }
 
         private static void WriteClass(Manager manager, ClassObject classObject, StreamWriter writer)
@@ -57,10 +56,10 @@ namespace CSharpSerialiser
         private static void WriteField(Manager manager, ClassField classField, StreamWriter writer, string fieldNameOverride = null)
         {
             var inputFieldName = $"input.{classField.Name}";
-            WriteFieldType(manager, classField.Type, inputFieldName, writer);
+            WriteFieldType(manager, classField.Type, inputFieldName, 0, writer);
         }
 
-        public static void WriteFieldType(Manager manager, ClassType classType, string paramName, StreamWriter writer)
+        public static void WriteFieldType(Manager manager, ClassType classType, string paramName, int depth, StreamWriter writer)
         {
             if (classType.CollectionType == CollectionType.NotACollection)
             {
@@ -76,31 +75,31 @@ namespace CSharpSerialiser
             }
             else if (classType.CollectionType == CollectionType.Array || classType.CollectionType == CollectionType.List)
             {
-                var itemName = $"item{paramName.Replace(".", "")}";
+                var itemName = $"item{(depth == 0 ? "" : depth.ToString())}";
                 writer.WriteLine($"output.Write({paramName}.Count);");
                 writer.WriteLine($"foreach (var {itemName} in {paramName})");
                 writer.WriteLine("{");
-                WriteFieldType(manager, classType.GenericTypes.First(), itemName, writer);
+                WriteFieldType(manager, classType.GenericTypes.First(), itemName, depth + 1, writer);
                 writer.WriteLine("}");
             }
             else if (classType.CollectionType == CollectionType.Dictionary)
             {
-                var itemName = $"kvp{paramName.Replace(".", "")}";
+                var itemName = $"kvp{(depth == 0 ? "" : depth.ToString())}";
                 var keyName = $"{itemName}.Key";
                 var valueName = $"{itemName}.Value";
 
                 writer.WriteLine($"output.Write({paramName}.Count);");
                 writer.WriteLine($"foreach (var {itemName} in {paramName})");
                 writer.WriteLine("{");
-                WriteFieldType(manager, classType.GenericTypes[0], keyName, writer);
-                WriteFieldType(manager, classType.GenericTypes[1], valueName, writer);
+                WriteFieldType(manager, classType.GenericTypes[0], keyName, depth + 1, writer);
+                WriteFieldType(manager, classType.GenericTypes[1], valueName, depth + 1, writer);
                 writer.WriteLine("}");
             }
         }
 
         private static string MakeReadMethodName(ClassName className)
         {
-            var fullName = className.Value.Replace(".", "");
+            var fullName = GetPrimitiveName(className);
             return $"Read{fullName}";
         }
         private static string GetPrimitiveName(ClassName className)
@@ -134,10 +133,10 @@ namespace CSharpSerialiser
 
         private static void ReadField(Manager manager, ClassField classField, StreamWriter writer)
         {
-             writer.WriteLine($"var {classField.Name} = {ReadFieldType(manager, classField.Name + "Value", classField.Type, writer)};");
+             writer.WriteLine($"var {classField.Name} = {ReadFieldType(manager, classField.Name + "Value", classField.Type, 0, writer)};");
         }
 
-        private static string ReadFieldType(Manager manager, string resultName, ClassType classType, StreamWriter writer)
+        private static string ReadFieldType(Manager manager, string resultName, ClassType classType, int depth, StreamWriter writer)
         {
             if (classType.CollectionType == CollectionType.NotACollection)
             {
@@ -157,13 +156,14 @@ namespace CSharpSerialiser
                 var countName = $"count{resultName}";
                 var genericType = classType.GenericTypes.First();
                 var genericTypeName = MakeGenericType(classType);
-                var iterator = $"iter{resultName}";
+                var depthStr = depth == 0 ? "" : depth.ToString();
+                var iterator = $"iter{depthStr}";
 
                 writer.WriteLine($"var {countName} = input.ReadInt32();");
                 writer.WriteLine($"var {resultName} = new {genericTypeName}({countName});");
                 writer.WriteLine($"for (var {iterator} = 0; {iterator} < {countName}; {iterator}++)");
                 writer.WriteLine("{");
-                writer.WriteLine($"{resultName}.Add({ReadFieldType(manager, resultName + "_", genericType, writer)});");
+                writer.WriteLine($"{resultName}.Add({ReadFieldType(manager, resultName + "_", genericType, depth + 1, writer)});");
                 writer.WriteLine("}");
 
                 return resultName;
@@ -173,16 +173,18 @@ namespace CSharpSerialiser
                 var countName = $"count{resultName}";
                 var keyType = classType.GenericTypes[0];
                 var valueType = classType.GenericTypes[1];
-                var keyName = $"key{resultName}";
-                var valueName = $"value{resultName}";
+                var depthStr = depth == 0 ? "" : depth.ToString();
+                var keyName = $"key{depthStr}";
+                var valueName = $"value{depthStr}";
+                var indexName = $"i{depthStr}";
                 var genericName = MakeGenericType(classType);
 
                 writer.WriteLine($"var {countName} = input.ReadInt32();");
                 writer.WriteLine($"var {resultName} = new {genericName}();");
-                writer.WriteLine($"for (var i = 0; i < {countName}; i++)");
+                writer.WriteLine($"for (var {indexName} = 0; {indexName} < {countName}; {indexName}++)");
                 writer.WriteLine("{");
-                writer.WriteLine($"var {keyName} = {ReadFieldType(manager, keyName, keyType, writer)};");
-                writer.WriteLine($"var {valueName} = {ReadFieldType(manager, valueName, valueType, writer)};");
+                writer.WriteLine($"var {keyName} = {ReadFieldType(manager, keyName, keyType, depth + 1, writer)};");
+                writer.WriteLine($"var {valueName} = {ReadFieldType(manager, valueName, valueType, depth + 1, writer)};");
                 writer.WriteLine($"{resultName}[{keyName}] = {valueName};");
                 writer.WriteLine("}");
 

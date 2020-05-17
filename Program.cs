@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Loader;
 
 namespace CSharpSerialiser
 {
+    [Serializable]
     public class Vector2
     {
         public float X;
@@ -17,6 +18,7 @@ namespace CSharpSerialiser
         }
     }
 
+    [Serializable]
     public class Definition
     {
         public readonly string Name;
@@ -35,20 +37,61 @@ namespace CSharpSerialiser
         }
     }
 
+    [Serializable]
+    public class DefinitionStore
+    {
+        public readonly IReadOnlyList<Definition> Definitions;
+
+        public DefinitionStore(IReadOnlyList<Definition> definitions)
+        {
+            this.Definitions = definitions;
+        }
+    }
+
     class Program
     {
+        private static readonly Random Rand = new Random();
+
+        static Vector2 RandomVec2()
+        {
+            return new Vector2((float)Rand.NextDouble(), (float)Rand.NextDouble());
+        }
+
+        static Definition RandomDef()
+        {
+            var name = "NAME_" + Rand.Next();
+            var positions = new List<List<Vector2>>();
+            for (var i = 0; i < 100; i++)
+            {
+                var positions_ = new List<Vector2>();
+                for (var j = 0; j < 100; j++)
+                {
+                    positions_.Add(RandomVec2());
+                }
+            }
+
+            var bonusPositions = new Dictionary<int, Vector2>();
+            for (var i = 0; i < 100; i++)
+            {
+                bonusPositions[i] = RandomVec2();
+            }
+            return new Definition(name, Rand.Next(), Rand.NextDouble() > 0.5, positions, bonusPositions);
+        }
+
         static void Main(string[] args)
         {
-            var manager = new Manager("Doggo.Serialiser");
+            var manager = new Manager(new string[]{"Doggo", "Serialiser"});
 
             manager.AddClass(Manager.CreateObjectFromType(typeof(Vector2)));
             manager.AddClass(Manager.CreateObjectFromType(typeof(Definition)));
+            manager.AddClass(Manager.CreateObjectFromType(typeof(DefinitionStore)));
 
             using (var file = File.OpenWrite("./TestBinSerialiser.cs"))
             {
                 CreateBinary.SaveToStream(manager, file);
             }
         }
+
         /*
         static void Main(string[] args)
         {
