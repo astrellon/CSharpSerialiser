@@ -58,39 +58,6 @@ namespace CSharpSerialiser
         {
             var inputFieldName = $"input.{classField.Name}";
             WriteFieldType(manager, classField.Type, inputFieldName, writer);
-
-            // var inputFieldName = fieldNameOverride ?? $"input.{classField.Name}";
-            // if (classField.CollectionType == CollectionType.List || classField.CollectionType == CollectionType.Array)
-            // {
-            //     writer.WriteLine($"output.Write({inputFieldName}.Count);");
-            //     writer.WriteLine($"foreach (var item in {inputFieldName})");
-            //     writer.WriteLine("{");
-
-            //     inputFieldName = "item";
-            // }
-            // else if (classField.CollectionType == CollectionType.Dictionary)
-            // {
-            //     writer.WriteLine($"output.Write({inputFieldName}.Count);");
-            //     writer.WriteLine($"foreach (var kvp in {inputFieldName})");
-            //     writer.WriteLine("{");
-
-            //     inputFieldName = "kvp.Value";
-            // }
-
-            // if (manager.ClassMap.TryGetValue(classField.TypeFullName, out var fieldClass))
-            // {
-            //     var writeName = MakeWriteMethodName(fieldClass);
-            //     writer.WriteLine($"{writeName}({inputFieldName}, output);");
-            // }
-            // else
-            // {
-            //     writer.WriteLine($"output.Write({inputFieldName});");
-            // }
-
-            // if (classField.CollectionType != CollectionType.NotACollection)
-            // {
-            //     writer.WriteLine("}");
-            // }
         }
 
         public static void WriteFieldType(Manager manager, ClassType classType, string paramName, StreamWriter writer)
