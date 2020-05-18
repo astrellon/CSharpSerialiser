@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.IO;
+using System.CodeDom.Compiler;
 
 namespace CSharpSerialiser
 {
@@ -9,7 +10,8 @@ namespace CSharpSerialiser
         #region Methods
         public static void SaveToStream(Manager manager, Stream output)
         {
-            using (var writer = new StreamWriter(output))
+            using (var streamWriter = new StreamWriter(output))
+            using (var writer = new IndentedTextWriter(streamWriter))
             {
                 writer.WriteLine("// Test output\n");
                 writer.WriteLine("using System;");
@@ -17,14 +19,18 @@ namespace CSharpSerialiser
                 writer.WriteLine("using System.Collections.Generic;\n");
                 writer.WriteLine($"namespace {string.Join('.', manager.NameSpace)}");
                 writer.WriteLine("{");
+                writer.Indent++;
                 writer.WriteLine($"public static partial class {manager.NameSpace.Last()}BinarySerialiser");
                 writer.WriteLine("{");
+                writer.Indent++;
                 foreach (var kvp in manager.ClassMap)
                 {
                     WriteClass(manager, kvp.Value, writer);
                     ReadClass(manager, kvp.Value, writer);
                 }
+                writer.Indent--;
                 writer.WriteLine("}");
+                writer.Indent--;
                 writer.WriteLine("}");
             }
         }
@@ -34,18 +40,20 @@ namespace CSharpSerialiser
             return $"Write";
         }
 
-        private static void WriteClass(Manager manager, ClassObject classObject, StreamWriter writer)
+        private static void WriteClass(Manager manager, ClassObject classObject, IndentedTextWriter writer)
         {
             var writeName = MakeWriteMethodName(classObject);
             writer.WriteLine($"public static void {writeName}({classObject.FullName.Value} input, BinaryWriter output)");
             writer.WriteLine("{");
 
+            writer.Indent++;
             WriteFields(manager, classObject, writer);
+            writer.Indent--;
 
             writer.WriteLine("}");
         }
 
-        private static void WriteFields(Manager manager, ClassObject classObject, StreamWriter writer)
+        private static void WriteFields(Manager manager, ClassObject classObject, IndentedTextWriter writer)
         {
             foreach (var field in classObject.Fields)
             {
@@ -53,13 +61,13 @@ namespace CSharpSerialiser
             }
         }
 
-        private static void WriteField(Manager manager, ClassField classField, StreamWriter writer, string fieldNameOverride = null)
+        private static void WriteField(Manager manager, ClassField classField, IndentedTextWriter writer, string fieldNameOverride = null)
         {
             var inputFieldName = $"input.{classField.Name}";
             WriteFieldType(manager, classField.Type, inputFieldName, 0, writer);
         }
 
-        public static void WriteFieldType(Manager manager, ClassType classType, string paramName, int depth, StreamWriter writer)
+        public static void WriteFieldType(Manager manager, ClassType classType, string paramName, int depth, IndentedTextWriter writer)
         {
             if (classType.CollectionType == CollectionType.NotACollection)
             {
@@ -79,7 +87,9 @@ namespace CSharpSerialiser
                 writer.WriteLine($"output.Write({paramName}.Count);");
                 writer.WriteLine($"foreach (var {itemName} in {paramName})");
                 writer.WriteLine("{");
+                writer.Indent++;
                 WriteFieldType(manager, classType.GenericTypes.First(), itemName, depth + 1, writer);
+                writer.Indent--;
                 writer.WriteLine("}");
             }
             else if (classType.CollectionType == CollectionType.Dictionary)
@@ -91,8 +101,10 @@ namespace CSharpSerialiser
                 writer.WriteLine($"output.Write({paramName}.Count);");
                 writer.WriteLine($"foreach (var {itemName} in {paramName})");
                 writer.WriteLine("{");
+                writer.Indent++;
                 WriteFieldType(manager, classType.GenericTypes[0], keyName, depth + 1, writer);
                 WriteFieldType(manager, classType.GenericTypes[1], valueName, depth + 1, writer);
+                writer.Indent--;
                 writer.WriteLine("}");
             }
         }
@@ -108,18 +120,20 @@ namespace CSharpSerialiser
             return className.Value.Substring(lastDot + 1);
         }
 
-        private static void ReadClass(Manager manager, ClassObject classObject, StreamWriter writer)
+        private static void ReadClass(Manager manager, ClassObject classObject, IndentedTextWriter writer)
         {
             var readName = MakeReadMethodName(classObject.FullName);
             writer.WriteLine($"public static {classObject.FullName.Value} {readName}(BinaryReader input)");
             writer.WriteLine("{");
 
+            writer.Indent++;
             ReadFields(manager, classObject, writer);
+            writer.Indent--;
 
             writer.WriteLine("}");
         }
 
-        private static void ReadFields(Manager manager, ClassObject classObject, StreamWriter writer)
+        private static void ReadFields(Manager manager, ClassObject classObject, IndentedTextWriter writer)
         {
             foreach (var field in classObject.Fields)
             {
@@ -131,12 +145,12 @@ namespace CSharpSerialiser
             writer.WriteLine($"return new {classObject.FullName.Value}({ctorArgs});");
         }
 
-        private static void ReadField(Manager manager, ClassField classField, StreamWriter writer)
+        private static void ReadField(Manager manager, ClassField classField, IndentedTextWriter writer)
         {
              writer.WriteLine($"var {classField.Name} = {ReadFieldType(manager, classField.Name + "Value", classField.Type, 0, writer)};");
         }
 
-        private static string ReadFieldType(Manager manager, string resultName, ClassType classType, int depth, StreamWriter writer)
+        private static string ReadFieldType(Manager manager, string resultName, ClassType classType, int depth, IndentedTextWriter writer)
         {
             if (classType.CollectionType == CollectionType.NotACollection)
             {
@@ -163,7 +177,9 @@ namespace CSharpSerialiser
                 writer.WriteLine($"var {resultName} = new {genericTypeName}({countName});");
                 writer.WriteLine($"for (var {iterator} = 0; {iterator} < {countName}; {iterator}++)");
                 writer.WriteLine("{");
+                writer.Indent++;
                 writer.WriteLine($"{resultName}.Add({ReadFieldType(manager, resultName + "_", genericType, depth + 1, writer)});");
+                writer.Indent--;
                 writer.WriteLine("}");
 
                 return resultName;
@@ -183,9 +199,11 @@ namespace CSharpSerialiser
                 writer.WriteLine($"var {resultName} = new {genericName}();");
                 writer.WriteLine($"for (var {indexName} = 0; {indexName} < {countName}; {indexName}++)");
                 writer.WriteLine("{");
+                writer.Indent++;
                 writer.WriteLine($"var {keyName} = {ReadFieldType(manager, keyName, keyType, depth + 1, writer)};");
                 writer.WriteLine($"var {valueName} = {ReadFieldType(manager, valueName, valueType, depth + 1, writer)};");
                 writer.WriteLine($"{resultName}[{keyName}] = {valueName};");
+                writer.Indent--;
                 writer.WriteLine("}");
 
                 return resultName;
