@@ -1,23 +1,19 @@
+using System.Collections.Generic;
+
 namespace CSharpSerialiser
 {
-    public enum CollectionType
+    public class ClassGeneric
     {
-        NotACollection, Array, List, Dictionary, Enum
-    }
-
-    public class ClassField
-    {
-
         #region Fields
         public readonly string Name;
-        public readonly ClassType Type;
+        public readonly IReadOnlyList<ClassType> Constraints;
         #endregion
 
         #region Constructor
-        public ClassField(string name, ClassType type)
+        public ClassGeneric(string name, IReadOnlyList<ClassType> constraints)
         {
             this.Name = name;
-            this.Type = type;
+            this.Constraints = constraints;
         }
         #endregion
 

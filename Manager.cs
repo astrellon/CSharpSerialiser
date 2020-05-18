@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace CSharpSerialiser
 {
@@ -9,6 +10,7 @@ namespace CSharpSerialiser
     {
         #region Fields
         public readonly IReadOnlyList<string> NameSpace;
+        public readonly string BaseSerialiserClassName;
 
         private readonly Dictionary<ClassName, ClassObject> classMap = new Dictionary<ClassName, ClassObject>();
 
@@ -16,9 +18,10 @@ namespace CSharpSerialiser
         #endregion
 
         #region Constructor
-        public Manager(IReadOnlyList<string> nameSpace)
+        public Manager(IReadOnlyList<string> nameSpace, string baseSerialiserClassName)
         {
             this.NameSpace = nameSpace;
+            this.BaseSerialiserClassName = baseSerialiserClassName;
         }
         #endregion
 
@@ -54,6 +57,10 @@ namespace CSharpSerialiser
                     containerType = CollectionType.Dictionary;
                 }
             }
+            if (type.IsEnum)
+            {
+                containerType = CollectionType.Enum;
+            }
 
             return new ClassType(new ClassName(type.FullName), containerType, genericTypes);
         }
@@ -63,6 +70,12 @@ namespace CSharpSerialiser
             var fields = new List<ClassField>();
             foreach (var field in type.GetFields())
             {
+                // Static class fields should be properties as well.
+                if (field.Attributes.HasFlag(FieldAttributes.Static))
+                {
+                    continue;
+                }
+
                 var fieldType = (Type)null;
                 try
                 {
@@ -75,16 +88,51 @@ namespace CSharpSerialiser
 
                 if (fieldType != null)
                 {
-                    var classType = CreateTypeFromType(field.FieldType);
+                    var ignore = field.GetCustomAttributes(typeof(NonSerializedAttribute), false).Any();
+                    if (ignore || field.Name == null)
+                    {
+                        continue;
+                    }
+
+                    var classType = CreateTypeFromType(fieldType);
                     fields.Add(new ClassField(field.Name, classType));
                 }
             }
 
             var ctors = type.GetConstructors();
             var ctor = ctors.First();
-            var ctorFields = ctor.GetParameters().Select(p => p.Name).ToList();
+            var ctorFields = new List<ClassField>();
+            foreach (var ctorField in ctor.GetParameters())
+            {
+                var fieldType = (Type)null;
+                try
+                {
+                    fieldType = ctorField.ParameterType;
+                }
+                catch (IOException)
+                {
+                    fieldType = null;
+                }
 
-            return new ClassObject(new ClassName(type.FullName), fields, ctorFields);
+                if (fieldType != null)
+                {
+                    var classType = CreateTypeFromType(fieldType);
+                    ctorFields.Add(new ClassField(ctorField.Name, classType));
+                }
+            }
+
+            var generics = new List<ClassGeneric>();
+            foreach (var genericType in type.GetGenericArguments())
+            {
+                var constraints = new List<ClassType>();
+                foreach (var constraint in genericType.GetGenericParameterConstraints())
+                {
+                    constraints.Add(CreateTypeFromType(constraint));
+                }
+
+                generics.Add(new ClassGeneric(genericType.Name, constraints));
+            }
+            return new ClassObject(new ClassName(type.FullName), fields, ctorFields, generics);
         }
         #endregion
     }

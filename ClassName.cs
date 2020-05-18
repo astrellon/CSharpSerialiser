@@ -15,7 +15,7 @@ namespace CSharpSerialiser
         #region Constructor
         public ClassName(string value)
         {
-            this.Value = string.Intern(value);
+            this.Value = string.Intern(ProcessTypeName(value));
         }
         #endregion
 
@@ -47,7 +47,7 @@ namespace CSharpSerialiser
 
         public override string ToString()
         {
-            return $"ClassName: {this.Value}";
+            return this.Value;
         }
 
         public static ClassName FromValue(string input)
@@ -63,6 +63,17 @@ namespace CSharpSerialiser
         public static bool operator!=(ClassName input1, ClassName input2)
         {
             return input1.Value != input2.Value;
+        }
+
+        public static string ProcessTypeName(string typeName)
+        {
+            var backtickIndex = typeName.IndexOf('`');
+            if (backtickIndex > 0)
+            {
+                return typeName.Substring(0, backtickIndex);
+            }
+
+            return typeName;
         }
         #endregion
     }

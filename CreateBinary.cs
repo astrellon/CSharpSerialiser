@@ -8,26 +8,41 @@ namespace CSharpSerialiser
     public static class CreateBinary
     {
         #region Methods
-        public static void SaveToStream(Manager manager, Stream output)
+        public static void SaveToFolder(Manager manager, string folder)
+        {
+            Directory.CreateDirectory(folder);
+
+            foreach (var classObject in manager.ClassMap.Values)
+            {
+                var filename = $"{GetPrimitiveName(classObject.FullName)}BinarySerialiser.cs";
+                var outputFile = Path.Combine(folder, filename);
+
+                using (var file = File.OpenWrite(outputFile))
+                {
+                    SaveToStream(manager, classObject, file);
+                }
+            }
+        }
+
+        public static void SaveToStream(Manager manager, ClassObject classObject, Stream output)
         {
             using (var streamWriter = new StreamWriter(output))
             using (var writer = new IndentedTextWriter(streamWriter))
             {
-                writer.WriteLine("// Test output\n");
+                writer.WriteLine($"// Auto generated BinarySerialiser for {classObject.FullName}\n");
                 writer.WriteLine("using System;");
                 writer.WriteLine("using System.IO;\n");
                 writer.WriteLine("using System.Collections.Generic;\n");
                 writer.WriteLine($"namespace {string.Join('.', manager.NameSpace)}");
                 writer.WriteLine("{");
                 writer.Indent++;
-                writer.WriteLine($"public static partial class {manager.NameSpace.Last()}BinarySerialiser");
+                writer.WriteLine($"public static partial class {manager.BaseSerialiserClassName}BinarySerialiser");
                 writer.WriteLine("{");
                 writer.Indent++;
-                foreach (var kvp in manager.ClassMap)
-                {
-                    WriteClass(manager, kvp.Value, writer);
-                    ReadClass(manager, kvp.Value, writer);
-                }
+
+                WriteClass(manager, classObject, writer);
+                ReadClass(manager, classObject, writer);
+
                 writer.Indent--;
                 writer.WriteLine("}");
                 writer.Indent--;
@@ -37,13 +52,17 @@ namespace CSharpSerialiser
 
         private static string MakeWriteMethodName(ClassObject classObject)
         {
-            return $"Write";
+            return "Write";
         }
 
         private static void WriteClass(Manager manager, ClassObject classObject, IndentedTextWriter writer)
         {
             var writeName = MakeWriteMethodName(classObject);
-            writer.WriteLine($"public static void {writeName}({classObject.FullName.Value} input, BinaryWriter output)");
+            var generics = CreateGenericClassString(classObject);
+            var constraints = CreateGenericConstraintsString(classObject);
+
+            writer.Write($"public static void {writeName}{generics}({classObject.FullName.Value}{generics} input, BinaryWriter output)");
+            writer.WriteLine(constraints);
             writer.WriteLine("{");
 
             writer.Indent++;
@@ -81,6 +100,10 @@ namespace CSharpSerialiser
                     writer.WriteLine($"output.Write({paramName});");
                 }
             }
+            else if (classType.CollectionType == CollectionType.Enum)
+            {
+                writer.WriteLine($"output.Write((int){paramName});");
+            }
             else if (classType.CollectionType == CollectionType.Array || classType.CollectionType == CollectionType.List)
             {
                 var itemName = $"item{(depth == 0 ? "" : depth.ToString())}";
@@ -109,9 +132,9 @@ namespace CSharpSerialiser
             }
         }
 
-        private static string MakeReadMethodName(ClassName className)
+        private static string MakeReadMethodName(ClassObject classObject)
         {
-            var fullName = GetPrimitiveName(className);
+            var fullName = GetPrimitiveName(classObject.FullName);
             return $"Read{fullName}";
         }
         private static string GetPrimitiveName(ClassName className)
@@ -120,10 +143,50 @@ namespace CSharpSerialiser
             return className.Value.Substring(lastDot + 1);
         }
 
+        private static string CreateGenericClassString(ClassObject classObject)
+        {
+            var generics = "";
+            if (classObject.Generics.Any())
+            {
+                generics = "<";
+                foreach (var generic in classObject.Generics)
+                {
+                    if (generics.Length > 1)
+                    {
+                        generics += ", ";
+                    }
+                    generics += generic.Name;
+                }
+                generics += ">";
+            }
+
+            return generics;
+        }
+
+        private static string CreateGenericConstraintsString(ClassObject classObject)
+        {
+            var constraints = "";
+            foreach (var generic in classObject.Generics)
+            {
+                if (!generic.Constraints.Any())
+                {
+                    continue;
+                }
+
+                var constraintTypes = string.Join(", ", generic.Constraints.Select(c => c.Name.Value));
+                constraints += $" where {generic.Name} : {constraintTypes}\n";
+            }
+            return constraints;
+        }
+
         private static void ReadClass(Manager manager, ClassObject classObject, IndentedTextWriter writer)
         {
-            var readName = MakeReadMethodName(classObject.FullName);
-            writer.WriteLine($"public static {classObject.FullName.Value} {readName}(BinaryReader input)");
+            var readName = MakeReadMethodName(classObject);
+            var generics = CreateGenericClassString(classObject);
+            var constraints = CreateGenericConstraintsString(classObject);
+
+            writer.Write($"public static {classObject.FullName.Value}{generics} {readName}{generics}(BinaryReader input)");
+            writer.WriteLine(constraints);
             writer.WriteLine("{");
 
             writer.Indent++;
@@ -140,9 +203,50 @@ namespace CSharpSerialiser
                 ReadField(manager, field, writer);
             }
 
-            var fieldOrder = classObject.CtorFields.Select(cf => classObject.Fields.First(f => f.Name.Equals(cf, StringComparison.OrdinalIgnoreCase)));
+            var fieldOrder = new ClassField[classObject.CtorFields.Count];
+
+            for (var i = 0; i < classObject.CtorFields.Count; i++)
+            {
+                var ctorField = classObject.CtorFields[i];
+                foreach (var field in classObject.Fields)
+                {
+                    if (field.Name.Equals(ctorField.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        fieldOrder[i] = field;
+                        break;
+                    }
+                }
+            }
+
+            if (fieldOrder.Any(fo => fo == null))
+            {
+                for (var i = 0; i < classObject.CtorFields.Count; i++)
+                {
+                    if (fieldOrder[i] != null)
+                    {
+                        continue;
+                    }
+
+                    var ctorField = classObject.CtorFields[i];
+                    foreach (var field in classObject.Fields)
+                    {
+                        if (field.Type.Name == ctorField.Type.Name)
+                        {
+                            fieldOrder[i] = field;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (fieldOrder.Any(fo => fo == null))
+            {
+                throw new Exception($"Unable to determin ctor parameters for: {classObject.FullName}");
+            }
+
             var ctorArgs = string.Join(", ", fieldOrder.Select(f => f.Name));
-            writer.WriteLine($"return new {classObject.FullName.Value}({ctorArgs});");
+            var generics = CreateGenericClassString(classObject);
+            writer.WriteLine($"return new {classObject.FullName.Value}{generics}({ctorArgs});");
         }
 
         private static void ReadField(Manager manager, ClassField classField, IndentedTextWriter writer)
@@ -156,7 +260,13 @@ namespace CSharpSerialiser
             {
                 if (manager.ClassMap.TryGetValue(classType.Name, out var fieldClass))
                 {
-                    var readName = MakeReadMethodName(classType.Name);
+                    var fullName = GetPrimitiveName(classType.Name);
+                    var readName = $"Read{fullName}";
+                    if (classType.GenericTypes.Any())
+                    {
+                        var generics = MakeGenericType(classType);
+                        return $"{readName}<{generics}>(input)";
+                    }
                     return $"{readName}(input)";
                 }
                 else
@@ -164,6 +274,10 @@ namespace CSharpSerialiser
                     var primitiveType = GetPrimitiveName(classType.Name);
                     return $"input.Read{primitiveType}()";
                 }
+            }
+            else if (classType.CollectionType == CollectionType.Enum)
+            {
+                return $"({classType.Name.Value})input.ReadInt32();";
             }
             else if (classType.CollectionType == CollectionType.List || classType.CollectionType == CollectionType.Array)
             {
@@ -221,6 +335,11 @@ namespace CSharpSerialiser
             else if (type.CollectionType == CollectionType.Dictionary)
             {
                 return $"Dictionary<{MakeGenericType(type.GenericTypes[0])}, {MakeGenericType(type.GenericTypes[1])}>";
+            }
+
+            if (type.GenericTypes.Any())
+            {
+                return string.Join(", ", type.GenericTypes.Select(MakeGenericType));
             }
 
             return type.Name.Value;
