@@ -7,7 +7,6 @@ using System.IO;
 
 namespace CSharpSerialiser
 {
-    [Serializable]
     public class Vector2
     {
         public float X;
@@ -25,7 +24,45 @@ namespace CSharpSerialiser
         Engine, PowerSource, Teleporter
     }
 
-    [Serializable]
+    public enum ComponentType
+    {
+        Unknown, Airport, Seaport
+    }
+
+    public abstract class Component
+    {
+        public readonly string Name;
+
+        public Component(string name)
+        {
+            this.Name = name;
+        }
+    }
+
+    public class AirportComponent : Component
+    {
+        public static readonly ComponentType CompType = ComponentType.Airport;
+
+        public readonly string IATA;
+
+        public AirportComponent(string name, string iata) : base(name)
+        {
+            this.IATA = iata;
+        }
+    }
+
+    public class SeaportComponent : Component
+    {
+        public static readonly ComponentType CompType = ComponentType.Seaport;
+
+        public readonly string Code;
+
+        public SeaportComponent(string name, string code) : base(name)
+        {
+            this.Code = code;
+        }
+    }
+
     public class Definition
     {
         public readonly string Name;
@@ -34,8 +71,9 @@ namespace CSharpSerialiser
         public readonly DefinitionType DefinitionType;
         public readonly IReadOnlyList<IReadOnlyList<Vector2>> Positions;
         public readonly IReadOnlyDictionary<int, Vector2> BonusPositions;
+        public readonly IReadOnlyList<Component> MapComponents;
 
-        public Definition(string name, int age, bool isBool, DefinitionType definitionType, IReadOnlyList<IReadOnlyList<Vector2>> positions, IReadOnlyDictionary<int, Vector2> bonusPositions)
+        public Definition(string name, int age, bool isBool, DefinitionType definitionType, IReadOnlyList<IReadOnlyList<Vector2>> positions, IReadOnlyDictionary<int, Vector2> bonusPositions, IReadOnlyList<Component> mapComponents)
         {
             this.Name = name;
             this.Age = age;
@@ -43,10 +81,10 @@ namespace CSharpSerialiser
             this.DefinitionType = definitionType;
             this.Positions = positions;
             this.BonusPositions = bonusPositions;
+            this.MapComponents = mapComponents;
         }
     }
 
-    [Serializable]
     public class DefinitionStore
     {
         public readonly IReadOnlyList<Definition> Definitions;
@@ -85,55 +123,62 @@ namespace CSharpSerialiser
                 bonusPositions[i] = RandomVec2();
             }
 
-            return new Definition(name, Rand.Next(), Rand.NextDouble() > 0.5, DefinitionType.Engine, positions, bonusPositions);
+            return new Definition(name, Rand.Next(), Rand.NextDouble() > 0.5, DefinitionType.Engine, positions, bonusPositions, null);
+        }
+
+        static void Main(string[] args)
+        {
+            var manager = new Manager(new string[]{"Doggo", "Serialiser"}, "Doggo");
+
+            manager.AddBaseObjectFromType(typeof(Component), "CompType");
+            manager.AddClass(manager.CreateObjectFromType(typeof(Vector2)));
+            manager.AddClass(manager.CreateObjectFromType(typeof(Definition)));
+            manager.AddClass(manager.CreateObjectFromType(typeof(DefinitionStore)));
+
+            CreateBinary.SaveToFolder(manager, "Serialisers");
         }
 
         // static void Main(string[] args)
         // {
-        //     var manager = new Manager(new string[]{"Doggo", "Serialiser"}, "Doggo");
+        //     AssemblyLoadContext.Default.LoadFromAssemblyPath(@"/mnt/Velma/Unity/2019.3.12f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll");
+        //     var unityCoreAssembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(@"/mnt/Velma/Unity/2019.3.12f1/Editor/Data/Managed/UnityEngine/UnityEngine.CoreModule.dll");
+        //     AssemblyLoadContext.Default.LoadFromAssemblyPath(@"/mnt/Velma/Unity/2019.3.12f1/Editor/Data/Managed/UnityEngine/UnityEngine.SharedInternalsModule.dll");
+        //     var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(@"/home/alan/git/space-doggo-3/Library/ScriptAssemblies/Assembly-CSharp.dll");
 
-        //     manager.AddClass(Manager.CreateObjectFromType(typeof(Vector2)));
-        //     manager.AddClass(Manager.CreateObjectFromType(typeof(Definition)));
-        //     manager.AddClass(Manager.CreateObjectFromType(typeof(DefinitionStore)));
+        //     var manager = new Manager(new []{"Doggo.Serialisers"}, "Doggo");
+
+        //     foreach (var module in unityCoreAssembly.Modules)
+        //     {
+        //         TryAddType(manager, module, "UnityEngine.Vector3");
+        //         TryAddType(manager, module, "UnityEngine.Vector2");
+        //     }
+
+        //     foreach (var module in assembly.Modules)
+        //     {
+        //         foreach (var type in module.GetTypes())
+        //         {
+        //             var typeName = ClassName.ProcessTypeName(type.FullName);
+        //             if ((typeName.EndsWith("Definition") || typeName.EndsWith("Id")) && typeName.StartsWith("Doggo"))
+        //             {
+        //                 Console.WriteLine(typeName);
+        //                 manager.AddClass(manager.CreateObjectFromType(type));
+        //             }
+        //         }
+        //     }
 
         //     CreateBinary.SaveToFolder(manager, "Serialisers");
         // }
 
-        static void Main(string[] args)
+        private static bool TryAddType(Manager manager, Module module, string typeName)
         {
-            AssemblyLoadContext.Default.LoadFromAssemblyPath(@"/mnt/Velma/Unity/2019.3.12f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll");
-            var unityCoreAssembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(@"/mnt/Velma/Unity/2019.3.12f1/Editor/Data/Managed/UnityEngine/UnityEngine.CoreModule.dll");
-            AssemblyLoadContext.Default.LoadFromAssemblyPath(@"/mnt/Velma/Unity/2019.3.12f1/Editor/Data/Managed/UnityEngine/UnityEngine.SharedInternalsModule.dll");
-            var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(@"/home/alan/git/space-doggo-3/Library/ScriptAssemblies/Assembly-CSharp.dll");
-
-            var manager = new Manager(new []{"Doggo.Serialisers"}, "Doggo");
-
-            foreach (var module in unityCoreAssembly.Modules)
+            var vector3 = module.GetType(typeName);
+            if (vector3 != null)
             {
-                foreach (var type in module.GetTypes())
-                {
-                    if (type.Name == "Vector3" || type.Name == "Vector2")
-                    {
-                        Console.WriteLine(type.FullName);
-                        manager.AddClass(Manager.CreateObjectFromType(type));
-                    }
-                }
+                manager.AddClass(manager.CreateObjectFromType(vector3));
+                return true;
             }
 
-            foreach (var module in assembly.Modules)
-            {
-                foreach (var type in module.GetTypes())
-                {
-                    var typeName = ClassName.ProcessTypeName(type.FullName);
-                    if ((typeName.EndsWith("Definition") || typeName.EndsWith("Id")) && typeName.StartsWith("Doggo"))
-                    {
-                        Console.WriteLine(typeName);
-                        manager.AddClass(Manager.CreateObjectFromType(type));
-                    }
-                }
-            }
-
-            CreateBinary.SaveToFolder(manager, "Serialisers");
+            return false;
         }
     }
 }
