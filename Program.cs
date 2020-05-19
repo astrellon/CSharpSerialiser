@@ -144,45 +144,60 @@ namespace CSharpSerialiser
             }
         }
 
-        // static void Main(string[] args)
-        // {
-        //     var manager = new Manager(new string[]{"Doggo", "Serialiser"}, "Doggo");
+        static void MainMake(string[] args)
+        {
+            var manager = new Manager(new string[]{"Doggo", "Serialiser"}, "Doggo");
 
-        //     manager.AddBaseObjectFromType(typeof(Component), "CompType");
-        //     manager.AddClass(manager.CreateObjectFromType(typeof(Vector2)));
-        //     manager.AddClass(manager.CreateObjectFromType(typeof(Definition)));
-        //     manager.AddClass(manager.CreateObjectFromType(typeof(DefinitionStore)));
+            manager.AddBaseObjectFromType(typeof(Component), "CompType");
+            manager.AddClass(manager.CreateObjectFromType(typeof(Vector2)));
+            manager.AddClass(manager.CreateObjectFromType(typeof(Definition)));
+            manager.AddClass(manager.CreateObjectFromType(typeof(DefinitionStore)));
 
-        //     CreateBinary.SaveToFolder(manager, "Serialisers");
-        // }
+            CreateBinary.SaveToFolder(manager, "Serialisers");
+        }
 
         static void Main(string[] args)
         {
-            var defs = new List<Definition>();
-            for (var i = 0; i < 10000; i++)
-            {
-                defs.Add(RandomDef());
-            }
-            var store = new DefinitionStore(defs);
+            // var defs = new List<Definition>();
+            // for (var i = 0; i < 10000; i++)
+            // {
+            //     defs.Add(RandomDef());
+            // }
+            // var store = new DefinitionStore(defs);
+
+            // var sw = new Stopwatch();
+
+            // using (var file = File.OpenWrite("test.bin"))
+            // using (var output = new BinaryWriter(file))
+            // {
+            //     sw.Start();
+            //     Doggo.Serialiser.DoggoBinarySerialiser.Write(store, output);
+            //     sw.Stop();
+            // }
+
+            // Console.WriteLine($"Saving took: {sw.ElapsedMilliseconds}ms");
 
             var sw = new Stopwatch();
+            // var mem = new MemoryStream();
+            // using (var file = File.OpenRead("test.bin"))
+            // {
+            //     file.CopyTo(mem);
+            // }
 
-            using (var file = File.OpenWrite("test.bin"))
-            using (var output = new BinaryWriter(file))
-            {
-                sw.Start();
-                Doggo.Serialiser.DoggoBinarySerialiser.Write(store, output);
-                sw.Stop();
-            }
-
-            Console.WriteLine($"Saving took: {sw.ElapsedMilliseconds}ms");
+            // mem.Seek(0, SeekOrigin.Begin);
 
             using (var file = File.OpenRead("test.bin"))
-            using (var input = new BinaryReader(file))
+            using (var input = new Doggo.Serialiser.NopBinaryReader(file))
             {
-                sw.Start();
+                sw.Restart();
                 Doggo.Serialiser.DoggoBinarySerialiser.ReadDefinitionStore(input);
                 sw.Stop();
+
+                Console.WriteLine($"{input.boolSw.ElapsedMilliseconds}ms bools");
+                Console.WriteLine($"{input.byteSw.ElapsedMilliseconds}ms bytes");
+                Console.WriteLine($"{input.intSw.ElapsedMilliseconds}ms ints");
+                Console.WriteLine($"{input.floatSw.ElapsedMilliseconds}ms floats");
+                Console.WriteLine($"{input.stringSw.ElapsedMilliseconds}ms strings");
             }
 
             Console.WriteLine($"Reading took: {sw.ElapsedMilliseconds}ms");

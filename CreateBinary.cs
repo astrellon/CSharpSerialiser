@@ -8,6 +8,9 @@ namespace CSharpSerialiser
 {
     public static class CreateBinary
     {
+        private const string Writer = "BinaryWriter";
+        private const string Reader = "NopBinaryReader";
+
         private static readonly IReadOnlyList<char> IndexIterators = new []{'i', 'j', 'k', 'l'};
 
         #region Methods
@@ -95,7 +98,7 @@ namespace CSharpSerialiser
             var generics = CreateGenericClassString(classObject.Generics);
             var constraints = CreateGenericConstraintsString(classObject.Generics);
 
-            writer.Write($"public static void Write{generics}({classObject.FullName.Value}{generics} input, BinaryWriter output)");
+            writer.Write($"public static void Write{generics}({classObject.FullName.Value}{generics} input, {Writer} output)");
             writer.WriteLine(constraints);
             writer.WriteLine("{");
 
@@ -117,7 +120,7 @@ namespace CSharpSerialiser
                 return;
             }
 
-            writer.Write($"public static void Write{generics}({classBaseObject.FullName.Value}{generics} input, BinaryWriter output)");
+            writer.Write($"public static void Write{generics}({classBaseObject.FullName.Value}{generics} input, {Writer} output)");
             writer.WriteLine(constraints);
             writer.WriteLine("{");
 
@@ -266,7 +269,7 @@ namespace CSharpSerialiser
             var generics = CreateGenericClassString(classObject.Generics);
             var constraints = CreateGenericConstraintsString(classObject.Generics);
 
-            writer.Write($"public static {classObject.FullName.Value}{generics} {readName}{generics}(BinaryReader input)");
+            writer.Write($"public static {classObject.FullName.Value}{generics} {readName}{generics}({Reader} input)");
             writer.WriteLine(constraints);
             writer.WriteLine("{");
 
@@ -283,7 +286,7 @@ namespace CSharpSerialiser
             var generics = CreateGenericClassString(classBaseObject.Generics);
             var constraints = CreateGenericConstraintsString(classBaseObject.Generics);
 
-            writer.Write($"public static {classBaseObject.FullName.Value}{generics} {readName}{generics}(BinaryReader input)");
+            writer.Write($"public static {classBaseObject.FullName.Value}{generics} {readName}{generics}({Reader} input)");
             writer.WriteLine(constraints);
             writer.WriteLine("{");
             writer.Indent++;
