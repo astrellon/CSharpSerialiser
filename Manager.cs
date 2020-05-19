@@ -3,6 +3,7 @@ using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace CSharpSerialiser
 {
@@ -155,6 +156,7 @@ namespace CSharpSerialiser
         {
             var containerType = CollectionType.NotACollection;
             var genericTypes = new List<ClassType>();
+            var enumUnderlayingType = (ClassType)null;
             if (type.IsGenericType)
             {
                 var genericDef = type.GetGenericTypeDefinition();
@@ -179,10 +181,11 @@ namespace CSharpSerialiser
             }
             if (type.IsEnum)
             {
+                enumUnderlayingType = CreateTypeFromType(Enum.GetUnderlyingType(type));
                 containerType = CollectionType.Enum;
             }
 
-            return new ClassType(new ClassName(type.FullName), containerType, genericTypes);
+            return new ClassType(new ClassName(type.FullName), containerType, genericTypes, enumUnderlayingType);
         }
 
         public static IEnumerable<Type> GetEnumerableOfType(Type input)

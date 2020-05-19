@@ -9,15 +9,17 @@ namespace CSharpSerialiser
         public readonly ClassName Name;
         public readonly CollectionType CollectionType;
         public readonly IReadOnlyList<ClassType> GenericTypes;
+        public readonly ClassType EnumUnderlayingType;
 
         #endregion
 
         #region Constructor
-        public ClassType(ClassName name, CollectionType collectionType, IReadOnlyList<ClassType> genericTypes = null)
+        public ClassType(ClassName name, CollectionType collectionType, IReadOnlyList<ClassType> genericTypes = null, ClassType enumUnderlayingType = null)
         {
             this.Name = name;
             this.CollectionType = collectionType;
             this.GenericTypes = genericTypes ?? new ClassType[0];
+            this.EnumUnderlayingType = enumUnderlayingType;
         }
         #endregion
 

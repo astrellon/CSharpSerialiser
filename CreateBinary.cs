@@ -183,7 +183,7 @@ namespace CSharpSerialiser
             }
             else if (classType.CollectionType == CollectionType.Enum)
             {
-                writer.WriteLine($"output.Write((int){paramName});");
+                writer.WriteLine($"output.Write(({classType.EnumUnderlayingType.Name}){paramName});");
             }
             else if (classType.CollectionType == CollectionType.Array || classType.CollectionType == CollectionType.List)
             {
@@ -409,7 +409,8 @@ namespace CSharpSerialiser
             }
             else if (classType.CollectionType == CollectionType.Enum)
             {
-                return $"({classType.Name.Value})input.ReadInt32()";
+                var primitiveType = GetPrimitiveName(classType.EnumUnderlayingType.Name);
+                return $"({classType.Name.Value})input.Read{primitiveType}()";
             }
             else if (classType.CollectionType == CollectionType.List || classType.CollectionType == CollectionType.Array)
             {

@@ -24,7 +24,7 @@ namespace CSharpSerialiser
         Engine, PowerSource, Teleporter
     }
 
-    public enum ComponentType
+    public enum ComponentType : byte
     {
         Unknown, Airport, Seaport
     }
@@ -123,19 +123,69 @@ namespace CSharpSerialiser
                 bonusPositions[i] = RandomVec2();
             }
 
-            return new Definition(name, Rand.Next(), Rand.NextDouble() > 0.5, DefinitionType.Engine, positions, bonusPositions, null);
+            var comps = new List<Component>();
+            for (var i = 0; i < 32; i++)
+            {
+                comps.Add(RandomComp());
+            }
+
+            return new Definition(name, Rand.Next(), Rand.NextDouble() > 0.5, DefinitionType.Engine, positions, bonusPositions, comps);
         }
+
+        static Component RandomComp()
+        {
+            if (Rand.NextDouble() > 0.5)
+            {
+                return new AirportComponent("AIRPORT_" + Rand.Next(), "IATA_" + Rand.Next());
+            }
+            else
+            {
+                return new SeaportComponent("SEAPORT_" + Rand.Next(), "CODE_" + Rand.Next());
+            }
+        }
+
+        // static void Main(string[] args)
+        // {
+        //     var manager = new Manager(new string[]{"Doggo", "Serialiser"}, "Doggo");
+
+        //     manager.AddBaseObjectFromType(typeof(Component), "CompType");
+        //     manager.AddClass(manager.CreateObjectFromType(typeof(Vector2)));
+        //     manager.AddClass(manager.CreateObjectFromType(typeof(Definition)));
+        //     manager.AddClass(manager.CreateObjectFromType(typeof(DefinitionStore)));
+
+        //     CreateBinary.SaveToFolder(manager, "Serialisers");
+        // }
 
         static void Main(string[] args)
         {
-            var manager = new Manager(new string[]{"Doggo", "Serialiser"}, "Doggo");
+            var defs = new List<Definition>();
+            for (var i = 0; i < 10000; i++)
+            {
+                defs.Add(RandomDef());
+            }
+            var store = new DefinitionStore(defs);
 
-            manager.AddBaseObjectFromType(typeof(Component), "CompType");
-            manager.AddClass(manager.CreateObjectFromType(typeof(Vector2)));
-            manager.AddClass(manager.CreateObjectFromType(typeof(Definition)));
-            manager.AddClass(manager.CreateObjectFromType(typeof(DefinitionStore)));
+            var sw = new Stopwatch();
 
-            CreateBinary.SaveToFolder(manager, "Serialisers");
+            using (var file = File.OpenWrite("test.bin"))
+            using (var output = new BinaryWriter(file))
+            {
+                sw.Start();
+                Doggo.Serialiser.DoggoBinarySerialiser.Write(store, output);
+                sw.Stop();
+            }
+
+            Console.WriteLine($"Saving took: {sw.ElapsedMilliseconds}ms");
+
+            using (var file = File.OpenRead("test.bin"))
+            using (var input = new BinaryReader(file))
+            {
+                sw.Start();
+                Doggo.Serialiser.DoggoBinarySerialiser.ReadDefinitionStore(input);
+                sw.Stop();
+            }
+
+            Console.WriteLine($"Reading took: {sw.ElapsedMilliseconds}ms");
         }
 
         // static void Main(string[] args)
