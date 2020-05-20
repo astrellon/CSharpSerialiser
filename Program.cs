@@ -148,14 +148,17 @@ namespace CSharpSerialiser
 
         static void Main(string[] args)
         {
-            var manager = new Manager(new string[]{"Doggo", "Serialiser"}, "Doggo");
+            var manager = new Manager(new string[]{"CSharpSerialiser"}, "CSharpSerialiser");
 
-            manager.AddBaseObjectFromType(typeof(Component), "CompType");
-            manager.AddClass(manager.CreateObjectFromType(typeof(Vector2)));
-            manager.AddClass(manager.CreateObjectFromType(typeof(Definition)));
-            manager.AddClass(manager.CreateObjectFromType(typeof(DefinitionStore)));
+            // manager.AddBaseObjectFromType(typeof(Component), "CompType");
+            // manager.AddClass(manager.CreateObjectFromType(typeof(Vector2)));
+            // manager.AddClass(manager.CreateObjectFromType(typeof(Definition)));
+            // manager.AddClass(manager.CreateObjectFromType(typeof(DefinitionStore)));
+            manager.AddClass(manager.CreateObjectFromType(typeof(Config)));
+            manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindBaseClass)));
+            manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindClass)));
 
-            CreateBinary.SaveToFolder(manager, "BinarySerialisers");
+            //CreateBinary.SaveToFolder(manager, "BinarySerialisers");
             CreateJson.SaveToFolder(manager, "JsonSerialisers");
         }
 

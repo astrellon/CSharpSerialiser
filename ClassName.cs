@@ -67,6 +67,7 @@ namespace CSharpSerialiser
 
         public static string ProcessTypeName(string typeName)
         {
+            typeName = typeName.Replace("+", ".");
             var backtickIndex = typeName.IndexOf('`');
             if (backtickIndex > 0)
             {
