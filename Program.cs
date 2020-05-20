@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.IO;
+using System.Text.Json;
 
 namespace CSharpSerialiser
 {
@@ -108,14 +109,15 @@ namespace CSharpSerialiser
         {
             var name = "NAME_" + Rand.Next();
             var positions = new List<List<Vector2>>();
-            for (var i = 0; i < 100; i++)
-            {
-                var positions_ = new List<Vector2>();
-                for (var j = 0; j < 100; j++)
-                {
-                    positions_.Add(RandomVec2());
-                }
-            }
+            // for (var i = 0; i < 100; i++)
+            // {
+            //     var positions_ = new List<Vector2>();
+            //     for (var j = 0; j < 100; j++)
+            //     {
+            //         positions_.Add(RandomVec2());
+            //     }
+            //     //positions.Add(positions_);
+            // }
 
             var bonusPositions = new Dictionary<int, Vector2>();
             for (var i = 0; i < 100; i++)
@@ -144,7 +146,7 @@ namespace CSharpSerialiser
             }
         }
 
-        static void MainMake(string[] args)
+        static void Main(string[] args)
         {
             var manager = new Manager(new string[]{"Doggo", "Serialiser"}, "Doggo");
 
@@ -153,55 +155,78 @@ namespace CSharpSerialiser
             manager.AddClass(manager.CreateObjectFromType(typeof(Definition)));
             manager.AddClass(manager.CreateObjectFromType(typeof(DefinitionStore)));
 
-            CreateBinary.SaveToFolder(manager, "Serialisers");
+            CreateBinary.SaveToFolder(manager, "BinarySerialisers");
+            CreateJson.SaveToFolder(manager, "JsonSerialisers");
         }
 
-        static void Main(string[] args)
-        {
-            // var defs = new List<Definition>();
-            // for (var i = 0; i < 10000; i++)
-            // {
-            //     defs.Add(RandomDef());
-            // }
-            // var store = new DefinitionStore(defs);
+        // static void Main(string[] args)
+        // {
+        //     var defs = new List<Definition>();
+        //     for (var i = 0; i < 10000; i++)
+        //     {
+        //         defs.Add(RandomDef());
+        //     }
+        //     var store = new DefinitionStore(defs);
 
-            // var sw = new Stopwatch();
+        //     var sw = new Stopwatch();
+        //     using (var file = File.Open("test.json", FileMode.Create))
+        //     using (var writer = new Utf8JsonWriter(file))
+        //     {
+        //         sw.Restart();
+        //         Doggo.Serialiser.DoggoJsonSerialiser.Write(store, writer);
+        //         sw.Stop();
+        //     }
 
-            // using (var file = File.OpenWrite("test.bin"))
-            // using (var output = new BinaryWriter(file))
-            // {
-            //     sw.Start();
-            //     Doggo.Serialiser.DoggoBinarySerialiser.Write(store, output);
-            //     sw.Stop();
-            // }
+        //     Console.WriteLine($"Took {sw.ElapsedMilliseconds}ms to save");
 
-            // Console.WriteLine($"Saving took: {sw.ElapsedMilliseconds}ms");
+        //     using (var file = File.OpenRead("test.json"))
+        //     using (var document = JsonDocument.Parse(file))
+        //     {
+        //         sw.Restart();
+        //         Doggo.Serialiser.DoggoJsonSerialiser.ReadDefinitionStore(document.RootElement);
+        //         sw.Stop();
+        //     }
 
-            var sw = new Stopwatch();
-            // var mem = new MemoryStream();
-            // using (var file = File.OpenRead("test.bin"))
-            // {
-            //     file.CopyTo(mem);
-            // }
+        //     Console.WriteLine($"Took {sw.ElapsedMilliseconds}ms to read");
+        // }
 
-            // mem.Seek(0, SeekOrigin.Begin);
+        //     // var sw = new Stopwatch();
 
-            using (var file = File.OpenRead("test.bin"))
-            using (var input = new Doggo.Serialiser.NopBinaryReader(file))
-            {
-                sw.Restart();
-                Doggo.Serialiser.DoggoBinarySerialiser.ReadDefinitionStore(input);
-                sw.Stop();
+        //     // using (var file = File.OpenWrite("test.bin"))
+        //     // using (var output = new BinaryWriter(file))
+        //     // {
+        //     //     sw.Start();
+        //     //     Doggo.Serialiser.DoggoBinarySerialiser.Write(store, output);
+        //     //     sw.Stop();
+        //     // }
 
-                Console.WriteLine($"{input.boolSw.ElapsedMilliseconds}ms bools");
-                Console.WriteLine($"{input.byteSw.ElapsedMilliseconds}ms bytes");
-                Console.WriteLine($"{input.intSw.ElapsedMilliseconds}ms ints");
-                Console.WriteLine($"{input.floatSw.ElapsedMilliseconds}ms floats");
-                Console.WriteLine($"{input.stringSw.ElapsedMilliseconds}ms strings");
-            }
+        //     // Console.WriteLine($"Saving took: {sw.ElapsedMilliseconds}ms");
 
-            Console.WriteLine($"Reading took: {sw.ElapsedMilliseconds}ms");
-        }
+        //     var sw = new Stopwatch();
+        //     // var mem = new MemoryStream();
+        //     // using (var file = File.OpenRead("test.bin"))
+        //     // {
+        //     //     file.CopyTo(mem);
+        //     // }
+
+        //     // mem.Seek(0, SeekOrigin.Begin);
+
+        //     using (var file = File.OpenRead("test.bin"))
+        //     using (var input = new BinaryReader(file))
+        //     {
+        //         sw.Restart();
+        //         Doggo.Serialiser.DoggoBinarySerialiser.ReadDefinitionStore(input);
+        //         sw.Stop();
+
+        //         Console.WriteLine($"{input.boolSw.ElapsedMilliseconds}ms bools");
+        //         Console.WriteLine($"{input.byteSw.ElapsedMilliseconds}ms bytes");
+        //         Console.WriteLine($"{input.intSw.ElapsedMilliseconds}ms ints");
+        //         Console.WriteLine($"{input.floatSw.ElapsedMilliseconds}ms floats");
+        //         Console.WriteLine($"{input.stringSw.ElapsedMilliseconds}ms strings");
+        //     }
+
+        //     Console.WriteLine($"Reading took: {sw.ElapsedMilliseconds}ms");
+        // }
 
         // static void Main(string[] args)
         // {
@@ -231,7 +256,8 @@ namespace CSharpSerialiser
         //         }
         //     }
 
-        //     CreateBinary.SaveToFolder(manager, "Serialisers");
+        //     CreateBinary.SaveToFolder(manager, "BinarySerialisers");
+        //     CreateJson.SaveToFolder(manager, "JsonSerialisers");
         // }
 
         private static bool TryAddType(Manager manager, Module module, string typeName)
