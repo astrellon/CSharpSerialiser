@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.CodeDom.Compiler;
 
 namespace CSharpSerialiser
 {
@@ -9,6 +10,8 @@ namespace CSharpSerialiser
     {
         #region Fields
         public static readonly IReadOnlyList<char> IndexIterators = new []{'i', 'j', 'k', 'l'};
+
+        public delegate void ReadFieldHandler(Manager manager, ClassField field, IndentedTextWriter writer);
         #endregion
 
         #region Methods
@@ -125,6 +128,85 @@ namespace CSharpSerialiser
             }
             return constraints;
         }
+
+        public static void ReadFieldsToCtor(Manager manager, ClassObject classObject, IndentedTextWriter writer, ReadFieldHandler readFieldHandler)
+        {
+            foreach (var field in classObject.Fields)
+            {
+                readFieldHandler(manager, field, writer);
+            }
+
+            var fieldOrder = new ClassField[classObject.CtorFields.Count];
+
+            for (var i = 0; i < classObject.CtorFields.Count; i++)
+            {
+                var ctorField = classObject.CtorFields[i];
+                foreach (var field in classObject.Fields)
+                {
+                    if (field.Name.Equals(ctorField.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        fieldOrder[i] = field;
+                        break;
+                    }
+                }
+            }
+
+            if (fieldOrder.Any(fo => fo == null))
+            {
+                for (var i = 0; i < classObject.CtorFields.Count; i++)
+                {
+                    if (fieldOrder[i] != null)
+                    {
+                        continue;
+                    }
+
+                    var ctorField = classObject.CtorFields[i];
+                    foreach (var field in classObject.Fields)
+                    {
+                        if (field.Type.Name == ctorField.Type.Name)
+                        {
+                            fieldOrder[i] = field;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (fieldOrder.Any(fo => fo == null))
+            {
+                throw new Exception($"Unable to determin ctor parameters for: {classObject.FullName}");
+            }
+
+            var ctorArgs = string.Join(", ", fieldOrder.Select(f => f.Name).Select(CodeGeneratorUtils.ToCamelCase));
+            var generics = CodeGeneratorUtils.CreateGenericClassString(classObject.Generics);
+            writer.WriteLine($"return new {classObject.FullName.Value}{generics}({ctorArgs});");
+        }
+
+        public static void WriteOuterClass(Manager manager, ClassName className, IndentedTextWriter writer, string classSuffix, IReadOnlyList<string> usingImports, Action writeInner)
+        {
+            writer.WriteLine($"// Auto generated {classSuffix} for {className}\n");
+
+            foreach (var usingImport in usingImports)
+            {
+                writer.WriteLine($"using {usingImport};");
+            }
+            writer.WriteLine();
+
+            writer.WriteLine($"namespace {string.Join('.', manager.NameSpace)}");
+            writer.WriteLine("{");
+            writer.Indent++;
+            writer.WriteLine($"public static partial class {manager.BaseSerialiserClassName}{classSuffix}");
+            writer.WriteLine("{");
+            writer.Indent++;
+
+            writeInner();
+
+            writer.Indent--;
+            writer.WriteLine("}");
+            writer.Indent--;
+            writer.WriteLine("}");
+        }
+
         #endregion
     }
 }

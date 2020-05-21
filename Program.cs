@@ -174,7 +174,7 @@ namespace CSharpSerialiser
             manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindBaseClass)));
             manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindClass)));
 
-            // CreateBinary.SaveToFolder(manager, "BinarySerialisers");
+            CreateBinary.SaveToFolder(manager, "BinarySerialisers");
             CreateJson.SaveToFolder(manager, "JsonSerialisers");
         }
 

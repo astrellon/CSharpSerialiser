@@ -46,24 +46,13 @@ namespace CSharpSerialiser
             using (var streamWriter = new StreamWriter(output))
             using (var writer = new IndentedTextWriter(streamWriter))
             {
-                writer.WriteLine($"// Auto generated BinarySerialiser for {classBaseObject.FullName}\n");
-                writer.WriteLine("using System;");
-                writer.WriteLine("using System.IO;\n");
-                writer.WriteLine("using System.Collections.Generic;\n");
-                writer.WriteLine($"namespace {string.Join('.', manager.NameSpace)}");
-                writer.WriteLine("{");
-                writer.Indent++;
-                writer.WriteLine($"public static partial class {manager.BaseSerialiserClassName}BinarySerialiser");
-                writer.WriteLine("{");
-                writer.Indent++;
-
-                WriteBaseClass(manager, classBaseObject, writer);
-                ReadBaseClass(manager, classBaseObject, writer);
-
-                writer.Indent--;
-                writer.WriteLine("}");
-                writer.Indent--;
-                writer.WriteLine("}");
+                CodeGeneratorUtils.WriteOuterClass(manager, classBaseObject.FullName, writer, "BinarySerialiser",
+                new []{"System", "System.IO", "System.Collections.Generic"},
+                () =>
+                {
+                    WriteBaseClass(manager, classBaseObject, writer);
+                    ReadBaseClass(manager, classBaseObject, writer);
+                });
             }
         }
 
@@ -72,24 +61,13 @@ namespace CSharpSerialiser
             using (var streamWriter = new StreamWriter(output))
             using (var writer = new IndentedTextWriter(streamWriter))
             {
-                writer.WriteLine($"// Auto generated BinarySerialiser for {classObject.FullName}\n");
-                writer.WriteLine("using System;");
-                writer.WriteLine("using System.IO;\n");
-                writer.WriteLine("using System.Collections.Generic;\n");
-                writer.WriteLine($"namespace {string.Join('.', manager.NameSpace)}");
-                writer.WriteLine("{");
-                writer.Indent++;
-                writer.WriteLine($"public static partial class {manager.BaseSerialiserClassName}BinarySerialiser");
-                writer.WriteLine("{");
-                writer.Indent++;
-
-                WriteClass(manager, classObject, writer);
-                ReadClass(manager, classObject, writer);
-
-                writer.Indent--;
-                writer.WriteLine("}");
-                writer.Indent--;
-                writer.WriteLine("}");
+                CodeGeneratorUtils.WriteOuterClass(manager, classObject.FullName, writer, "BinarySerialiser",
+                new []{"System", "System.IO", "System.Collections.Generic"},
+                () =>
+                {
+                    WriteClass(manager, classObject, writer);
+                    ReadClass(manager, classObject, writer);
+                });
             }
         }
 
@@ -106,7 +84,7 @@ namespace CSharpSerialiser
             WriteFields(manager, classObject, writer);
             writer.Indent--;
 
-            writer.WriteLine("}");
+            writer.WriteLine("}\n");
         }
 
         private static void WriteBaseClass(Manager manager, ClassBaseObject classBaseObject, IndentedTextWriter writer)
@@ -154,7 +132,7 @@ namespace CSharpSerialiser
             writer.WriteLine("}");
             writer.Indent--;
 
-            writer.WriteLine("}");
+            writer.WriteLine("}\n");
         }
 
         private static void WriteFields(Manager manager, ClassObject classObject, IndentedTextWriter writer)
@@ -191,13 +169,14 @@ namespace CSharpSerialiser
             else if (classType.CollectionType == CollectionType.Array || classType.CollectionType == CollectionType.List)
             {
                 var itemName = $"item{(depth == 0 ? "" : depth.ToString())}";
+                writer.WriteLine();
                 writer.WriteLine($"output.Write({paramName}.Count);");
                 writer.WriteLine($"foreach (var {itemName} in {paramName})");
                 writer.WriteLine("{");
                 writer.Indent++;
                 WriteFieldType(manager, classType.GenericTypes.First(), itemName, depth + 1, writer);
                 writer.Indent--;
-                writer.WriteLine("}");
+                writer.WriteLine("}\n");
             }
             else if (classType.CollectionType == CollectionType.Dictionary)
             {
@@ -205,6 +184,7 @@ namespace CSharpSerialiser
                 var keyName = $"{itemName}.Key";
                 var valueName = $"{itemName}.Value";
 
+                writer.WriteLine();
                 writer.WriteLine($"output.Write({paramName}.Count);");
                 writer.WriteLine($"foreach (var {itemName} in {paramName})");
                 writer.WriteLine("{");
@@ -212,10 +192,9 @@ namespace CSharpSerialiser
                 WriteFieldType(manager, classType.GenericTypes[0], keyName, depth + 1, writer);
                 WriteFieldType(manager, classType.GenericTypes[1], valueName, depth + 1, writer);
                 writer.Indent--;
-                writer.WriteLine("}");
+                writer.WriteLine("}\n");
             }
         }
-
 
         private static void ReadClass(Manager manager, ClassObject classObject, IndentedTextWriter writer)
         {
@@ -228,7 +207,7 @@ namespace CSharpSerialiser
             writer.WriteLine("{");
 
             writer.Indent++;
-            ReadFields(manager, classObject, writer);
+            CodeGeneratorUtils.ReadFieldsToCtor(manager, classObject, writer, ReadField);
             writer.Indent--;
 
             writer.WriteLine("}");
@@ -285,63 +264,10 @@ namespace CSharpSerialiser
             writer.WriteLine("}");
         }
 
-        private static void ReadFields(Manager manager, ClassObject classObject, IndentedTextWriter writer)
-        {
-            foreach (var field in classObject.Fields)
-            {
-                ReadField(manager, field, writer);
-            }
-
-            var fieldOrder = new ClassField[classObject.CtorFields.Count];
-
-            for (var i = 0; i < classObject.CtorFields.Count; i++)
-            {
-                var ctorField = classObject.CtorFields[i];
-                foreach (var field in classObject.Fields)
-                {
-                    if (field.Name.Equals(ctorField.Name, StringComparison.OrdinalIgnoreCase))
-                    {
-                        fieldOrder[i] = field;
-                        break;
-                    }
-                }
-            }
-
-            if (fieldOrder.Any(fo => fo == null))
-            {
-                for (var i = 0; i < classObject.CtorFields.Count; i++)
-                {
-                    if (fieldOrder[i] != null)
-                    {
-                        continue;
-                    }
-
-                    var ctorField = classObject.CtorFields[i];
-                    foreach (var field in classObject.Fields)
-                    {
-                        if (field.Type.Name == ctorField.Type.Name)
-                        {
-                            fieldOrder[i] = field;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (fieldOrder.Any(fo => fo == null))
-            {
-                throw new Exception($"Unable to determin ctor parameters for: {classObject.FullName}");
-            }
-
-            var ctorArgs = string.Join(", ", fieldOrder.Select(f => f.Name).Select(CodeGeneratorUtils.ToCamelCase));
-            var generics = CodeGeneratorUtils.CreateGenericClassString(classObject.Generics);
-            writer.WriteLine($"return new {classObject.FullName.Value}{generics}({ctorArgs});");
-        }
-
         private static void ReadField(Manager manager, ClassField classField, IndentedTextWriter writer)
         {
             var varString = CodeGeneratorUtils.ToCamelCase(classField.Name);
-            var valueString = ReadFieldType(manager, $"{classField.Name}Value", classField.Type, 0, writer);
+            var valueString = ReadFieldType(manager, $"{classField.Name}", classField.Type, 0, writer);
 
             if (varString != valueString)
             {
@@ -391,7 +317,7 @@ namespace CSharpSerialiser
                 writer.Indent++;
                 writer.WriteLine($"{resultName}.Add({ReadFieldType(manager, resultName + indexString.ToUpperInvariant(), genericType, depth + 1, writer)});");
                 writer.Indent--;
-                writer.WriteLine("}");
+                writer.WriteLine("}\n");
 
                 return resultName;
             }
@@ -416,7 +342,7 @@ namespace CSharpSerialiser
                 writer.WriteLine($"var {valueName} = {ReadFieldType(manager, valueName, valueType, depth + 1, writer)};");
                 writer.WriteLine($"{resultName}[{keyName}] = {valueName};");
                 writer.Indent--;
-                writer.WriteLine("}");
+                writer.WriteLine("}\n");
 
                 return resultName;
             }
