@@ -162,21 +162,21 @@ namespace CSharpSerialiser
             }
         }
 
-        static void Main(string[] args)
-        {
-            var manager = new Manager(new string[]{"CSharpSerialiser"}, "CSharpSerialiser");
+        // static void Main(string[] args)
+        // {
+        //     var manager = new Manager(new string[]{"CSharpSerialiser"}, "CSharpSerialiser");
 
-            // manager.AddBaseObjectFromType(typeof(Component), "CompType");
-            // manager.AddClass(manager.CreateObjectFromType(typeof(Vector2)));
-            // manager.AddClass(manager.CreateObjectFromType(typeof(Definition)));
-            // manager.AddClass(manager.CreateObjectFromType(typeof(DefinitionStore)));
-            manager.AddClass(manager.CreateObjectFromType(typeof(Config)));
-            manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindBaseClass)));
-            manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindClass)));
+        //     // manager.AddBaseObjectFromType(typeof(Component), "CompType");
+        //     // manager.AddClass(manager.CreateObjectFromType(typeof(Vector2)));
+        //     // manager.AddClass(manager.CreateObjectFromType(typeof(Definition)));
+        //     // manager.AddClass(manager.CreateObjectFromType(typeof(DefinitionStore)));
+        //     manager.AddClass(manager.CreateObjectFromType(typeof(Config)));
+        //     manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindBaseClass)));
+        //     manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindClass)));
 
-            CreateBinary.SaveToFolder(manager, "BinarySerialisers");
-            CreateJson.SaveToFolder(manager, "JsonSerialisers");
-        }
+        //     CreateBinary.SaveToFolder(manager, "BinarySerialisers");
+        //     CreateJson.SaveToFolder(manager, "JsonSerialisers");
+        // }
 
         // static void Main(string[] args)
         // {
@@ -280,12 +280,47 @@ namespace CSharpSerialiser
         //     CreateJson.SaveToFolder(manager, "JsonSerialisers");
         // }
 
+        static void Main(string[] args)
+        {
+            var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(@"/home/alan/git/three-divers/product/common/bin/Debug/netstandard2.0/common.dll");
+
+            var manager = new Manager(new []{"ThreeDivers", "Serialisers"}, "ThreeDivers");
+
+            foreach (var module in assembly.GetModules())
+            {
+                TryAddType(manager, module, "ThreeDivers.Latlng");
+                TryAddType(manager, module, "ThreeDivers.MapNodeId");
+                TryAddType(manager, module, "ThreeDivers.MapComponentId");
+                TryAddBaseType(manager, module, "ThreeDivers.MapComponentData", "ComponentType", null);
+                TryAddType(manager, module, "ThreeDivers.MapNode");
+            }
+
+            CreateJson.SaveToFolder(manager, "ThreeDiversJsonSerialisers");
+        }
+
         private static bool TryAddType(Manager manager, Module module, string typeName)
         {
-            var vector3 = module.GetType(typeName);
-            if (vector3 != null)
+            var type = module.GetType(typeName);
+            if (type != null)
             {
-                manager.AddClass(manager.CreateObjectFromType(vector3));
+                manager.AddClass(manager.CreateObjectFromType(type));
+                return true;
+            }
+
+            return false;
+        }
+        private static bool TryAddBaseType(Manager manager, Module module, string typeName, string typeDiscriminatorName, string interfaceBase)
+        {
+            var type = module.GetType(typeName);
+            if (type != null)
+            {
+                var interfaceBaseType = (Type)null;
+                if (!string.IsNullOrWhiteSpace(interfaceBase))
+                {
+                    interfaceBaseType = module.GetType(interfaceBase);
+                }
+
+                manager.AddBaseObjectFromType(type, typeDiscriminatorName, interfaceBaseType);
                 return true;
             }
 

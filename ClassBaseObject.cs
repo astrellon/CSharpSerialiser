@@ -21,15 +21,17 @@ namespace CSharpSerialiser
         public readonly ClassField TypeDiscriminator;
         public readonly IReadOnlyList<ClassGeneric> Generics;
         public readonly IReadOnlyList<SubclassPair> Subclasses;
+        public readonly ClassName InterfaceName;
         #endregion
 
         #region Constructor
-        public ClassBaseObject(ClassName fullName, ClassField typeDiscriminator, IReadOnlyList<ClassGeneric> generics, IReadOnlyList<SubclassPair> subclasses)
+        public ClassBaseObject(ClassName fullName, ClassField typeDiscriminator, IReadOnlyList<ClassGeneric> generics, IReadOnlyList<SubclassPair> subclasses, ClassName interfaceName)
         {
             this.FullName = fullName;
             this.TypeDiscriminator = typeDiscriminator;
             this.Generics = generics;
             this.Subclasses = subclasses;
+            this.InterfaceName = interfaceName;
         }
         #endregion
 

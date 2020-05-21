@@ -136,48 +136,57 @@ namespace CSharpSerialiser
                 readFieldHandler(manager, field, writer);
             }
 
-            var fieldOrder = new ClassField[classObject.CtorFields.Count];
-
-            for (var i = 0; i < classObject.CtorFields.Count; i++)
+            var finalFieldOrder = (ClassField[])null;
+            foreach (var ctorFields in classObject.CtorFields)
             {
-                var ctorField = classObject.CtorFields[i];
-                foreach (var field in classObject.Fields)
+                var fieldOrder = new ClassField[ctorFields.Count];
+                for (var i = 0; i < ctorFields.Count; i++)
                 {
-                    if (field.Name.Equals(ctorField.Name, StringComparison.OrdinalIgnoreCase))
-                    {
-                        fieldOrder[i] = field;
-                        break;
-                    }
-                }
-            }
-
-            if (fieldOrder.Any(fo => fo == null))
-            {
-                for (var i = 0; i < classObject.CtorFields.Count; i++)
-                {
-                    if (fieldOrder[i] != null)
-                    {
-                        continue;
-                    }
-
-                    var ctorField = classObject.CtorFields[i];
+                    var ctorField = ctorFields[i];
                     foreach (var field in classObject.Fields)
                     {
-                        if (field.Type.Name == ctorField.Type.Name)
+                        if (field.Name.Equals(ctorField.Name, StringComparison.OrdinalIgnoreCase))
                         {
                             fieldOrder[i] = field;
                             break;
                         }
                     }
                 }
+
+                if (fieldOrder.Any(fo => fo == null))
+                {
+                    for (var i = 0; i < ctorFields.Count; i++)
+                    {
+                        if (fieldOrder[i] != null)
+                        {
+                            continue;
+                        }
+
+                        var ctorField = ctorFields[i];
+                        foreach (var field in classObject.Fields)
+                        {
+                            if (field.Type.Name == ctorField.Type.Name)
+                            {
+                                fieldOrder[i] = field;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (fieldOrder.All(fo => fo != null))
+                {
+                    finalFieldOrder = fieldOrder;
+                    break;
+                }
             }
 
-            if (fieldOrder.Any(fo => fo == null))
+            if (finalFieldOrder == null)
             {
                 throw new Exception($"Unable to determin ctor parameters for: {classObject.FullName}");
             }
 
-            var ctorArgs = string.Join(", ", fieldOrder.Select(f => f.Name).Select(CodeGeneratorUtils.ToCamelCase));
+            var ctorArgs = string.Join(", ", finalFieldOrder.Select(f => f.Name).Select(CodeGeneratorUtils.ToCamelCase));
             var generics = CodeGeneratorUtils.CreateGenericClassString(classObject.Generics);
             writer.WriteLine($"return new {classObject.FullName.Value}{generics}({ctorArgs});");
         }

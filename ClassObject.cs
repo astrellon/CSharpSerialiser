@@ -7,13 +7,13 @@ namespace CSharpSerialiser
         #region Fields
         public readonly ClassName FullName;
         public readonly IReadOnlyList<ClassField> Fields;
-        public readonly IReadOnlyList<ClassField> CtorFields;
+        public readonly IReadOnlyList<IReadOnlyList<ClassField>> CtorFields;
         public readonly IReadOnlyList<ClassGeneric> Generics;
         public readonly ClassBaseObject BaseObject;
         #endregion
 
         #region Constructor
-        public ClassObject(ClassName fullName, IReadOnlyList<ClassField> fields, IReadOnlyList<ClassField> ctorFields, IReadOnlyList<ClassGeneric> generics, ClassBaseObject baseObject = null)
+        public ClassObject(ClassName fullName, IReadOnlyList<ClassField> fields, IReadOnlyList<IReadOnlyList<ClassField>> ctorFields, IReadOnlyList<ClassGeneric> generics, ClassBaseObject baseObject = null)
         {
             this.FullName = fullName;
             this.Fields = fields;

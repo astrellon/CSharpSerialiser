@@ -40,6 +40,11 @@ namespace CSharpSerialiser
         {
             Console.WriteLine($"Adding base class: {classBaseObject.FullName.Value}");
             this.classBaseObjectMap[classBaseObject.FullName] = classBaseObject;
+
+            if (!classBaseObject.InterfaceName.IsEmpty)
+            {
+                this.classBaseObjectMap[classBaseObject.InterfaceName] = classBaseObject;
+            }
         }
 
         public bool IsKnownClassOrBase(ClassName className)
@@ -72,22 +77,27 @@ namespace CSharpSerialiser
             }
 
             var ctors = type.GetConstructors();
-            var ctor = ctors.First();
-            var ctorFields = new List<ClassField>();
-            foreach (var ctorField in ctor.GetParameters())
+            var allCtorFields = new List<List<ClassField>>();
+            foreach (var ctor in ctors)
             {
-                if (TryGetValidParameterType(ctorField, out var fieldType))
+                var ctorFields = new List<ClassField>();
+                allCtorFields.Add(ctorFields);
+
+                foreach (var ctorField in ctor.GetParameters())
                 {
-                    var classType = CreateTypeFromType(fieldType);
-                    ctorFields.Add(new ClassField(ctorField.Name, classType));
+                    if (TryGetValidParameterType(ctorField, out var fieldType))
+                    {
+                        var classType = CreateTypeFromType(fieldType);
+                        ctorFields.Add(new ClassField(ctorField.Name, classType));
+                    }
                 }
             }
 
             var classGenerics = CreateGenericsFromType(type);
-            return new ClassObject(new ClassName(type.FullName), fields, ctorFields, classGenerics, baseObject);
+            return new ClassObject(new ClassName(type.FullName), fields, allCtorFields, classGenerics, baseObject);
         }
 
-        public ClassBaseObject AddBaseObjectFromType(Type type, string typeDiscriminatorName)
+        public ClassBaseObject AddBaseObjectFromType(Type type, string typeDiscriminatorName, Type interfaceBase)
         {
             var subclasses = Manager.GetEnumerableOfType(type);
             if (!subclasses.Any())
@@ -131,12 +141,18 @@ namespace CSharpSerialiser
             var classType = CreateTypeFromType(typeDiscriminatorType);
             var classField = new ClassField(typeDiscriminatorName, classType);
 
+            var interfaceName = ClassName.Empty;
+            if (interfaceBase != null)
+            {
+                interfaceName = new ClassName(interfaceBase.FullName);
+            }
+
             var classGenerics = CreateGenericsFromType(type);
 
             // Bit sneaky to give the class base object a mutable list even though it wants a readonly one
             // and to update it after creation.
             var subclassObjects = new List<ClassBaseObject.SubclassPair>();
-            var result = new ClassBaseObject(new ClassName(type.FullName), classField, classGenerics, subclassObjects);
+            var result = new ClassBaseObject(new ClassName(type.FullName), classField, classGenerics, subclassObjects, interfaceName);
 
             foreach (var subclass in subclasses)
             {
@@ -162,21 +178,19 @@ namespace CSharpSerialiser
                 var genericDef = type.GetGenericTypeDefinition();
                 genericTypes.AddRange(type.GenericTypeArguments.Select(CreateTypeFromType));
 
-                if (genericDef.IsAssignableFrom(typeof(IReadOnlyList<>)))
+                if (genericDef.IsArray)
                 {
                     containerType = CollectionType.Array;
-                    if (genericTypes.First().CollectionType != CollectionType.NotACollection)
-                    {
-                        containerType = CollectionType.List;
-                    }
-                }
-                else if (genericDef.IsAssignableFrom(typeof(IList<>)))
-                {
-                    containerType = CollectionType.List;
                 }
                 else if (genericDef.IsAssignableFrom(typeof(IReadOnlyDictionary<,>)))
                 {
                     containerType = CollectionType.Dictionary;
+                }
+                else if (genericDef.IsAssignableFrom(typeof(IList<>)) ||
+                    genericDef.IsAssignableFrom(typeof(List<>)) ||
+                    genericDef.IsAssignableFrom(typeof(IReadOnlyList<>)))
+                {
+                    containerType = CollectionType.List;
                 }
             }
             if (type.IsEnum)
@@ -190,8 +204,28 @@ namespace CSharpSerialiser
 
         public static IEnumerable<Type> GetEnumerableOfType(Type input)
         {
-            return Assembly.GetAssembly(input).GetTypes()
-                .Where(myType => myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(input));
+            var types = Utils.GetLoadedTypes(input);
+
+            foreach (var type in types)
+            {
+                var result = (Type)null;
+                try
+                {
+                    if (type.IsClass && !type.IsAbstract && type.IsSubclassOf(input))
+                    {
+                        result = type;
+                    }
+                }
+                catch (IOException)
+                {
+
+                }
+
+                if (result != null)
+                {
+                    yield return result;
+                }
+            }
         }
 
         private static IReadOnlyList<ClassGeneric> CreateGenericsFromType(Type type)
