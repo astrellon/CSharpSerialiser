@@ -15,20 +15,23 @@ namespace CSharpSerialiser
         {
             if (!skipStartObject)
                 output.WriteStartObject();
-            output.WriteStartArray("NameSpace");
+            
+            output.WriteStartArray("nameSpace");
             foreach (var item in input.NameSpace)
             {
                 output.WriteStringValue(item);
             }
             output.WriteEndArray();
-            output.WriteString("BaseSerialiserClassName", input.BaseSerialiserClassName);
-            output.WriteStartArray("FindBaseClasses");
+            output.WriteString("baseSerialiserClassName", input.BaseSerialiserClassName);
+            
+            output.WriteStartArray("findBaseClasses");
             foreach (var item in input.FindBaseClasses)
             {
                 Write(item, output);
             }
             output.WriteEndArray();
-            output.WriteStartArray("FindClasses");
+            
+            output.WriteStartArray("findClasses");
             foreach (var item in input.FindClasses)
             {
                 Write(item, output);
@@ -36,34 +39,29 @@ namespace CSharpSerialiser
             output.WriteEndArray();
             output.WriteEndObject();
         }
+
         public static CSharpSerialiser.Config ReadConfig(JsonElement input)
         {
-            var NameSpaceValueJson = input.GetProperty("NameSpace");
-            var countNameSpaceValue = NameSpaceValueJson.GetArrayLength();
-            var NameSpaceValue = new List<System.String>(countNameSpaceValue);
-            for (var i = 0; i < countNameSpaceValue; i++)
+            var nameSpace = new List<System.String>();
+            foreach (var value in input.GetProperty("nameSpace").EnumerateArray())
             {
-                NameSpaceValue.Add(NameSpaceValueJson[i].GetString());
+                nameSpace.Add(value.GetString());
             }
-            var NameSpace = NameSpaceValue;
-            var BaseSerialiserClassName = input.GetProperty("BaseSerialiserClassName").GetString();
-            var FindBaseClassesValueJson = input.GetProperty("FindBaseClasses");
-            var countFindBaseClassesValue = FindBaseClassesValueJson.GetArrayLength();
-            var FindBaseClassesValue = new List<CSharpSerialiser.Config.FindBaseClass>(countFindBaseClassesValue);
-            for (var i = 0; i < countFindBaseClassesValue; i++)
+
+            var baseSerialiserClassName = input.GetProperty("baseSerialiserClassName").GetString();
+            var findBaseClasses = new List<CSharpSerialiser.Config.FindBaseClass>();
+            foreach (var value in input.GetProperty("findBaseClasses").EnumerateArray())
             {
-                FindBaseClassesValue.Add(ReadFindBaseClass(FindBaseClassesValueJson[i]));
+                findBaseClasses.Add(ReadFindBaseClass(value));
             }
-            var FindBaseClasses = FindBaseClassesValue;
-            var FindClassesValueJson = input.GetProperty("FindClasses");
-            var countFindClassesValue = FindClassesValueJson.GetArrayLength();
-            var FindClassesValue = new List<CSharpSerialiser.Config.FindClass>(countFindClassesValue);
-            for (var i = 0; i < countFindClassesValue; i++)
+
+            var findClasses = new List<CSharpSerialiser.Config.FindClass>();
+            foreach (var value in input.GetProperty("findClasses").EnumerateArray())
             {
-                FindClassesValue.Add(ReadFindClass(FindClassesValueJson[i]));
+                findClasses.Add(ReadFindClass(value));
             }
-            var FindClasses = FindClassesValue;
-            return new CSharpSerialiser.Config(NameSpace, BaseSerialiserClassName, FindBaseClasses, FindClasses);
+
+            return new CSharpSerialiser.Config(nameSpace, baseSerialiserClassName, findBaseClasses, findClasses);
         }
     }
 }

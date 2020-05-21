@@ -15,13 +15,14 @@ namespace CSharpSerialiser
         {
             if (!skipStartObject)
                 output.WriteStartObject();
-            output.WriteString("TypeNameRegex", input.TypeNameRegex);
+            output.WriteString("typeNameRegex", input.TypeNameRegex);
             output.WriteEndObject();
         }
+
         public static CSharpSerialiser.Config.FindClass ReadFindClass(JsonElement input)
         {
-            var TypeNameRegex = input.GetProperty("TypeNameRegex").GetString();
-            return new CSharpSerialiser.Config.FindClass(TypeNameRegex);
+            var typeNameRegex = input.GetProperty("typeNameRegex").GetString();
+            return new CSharpSerialiser.Config.FindClass(typeNameRegex);
         }
     }
 }

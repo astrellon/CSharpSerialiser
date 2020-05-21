@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace CSharpSerialiser
 {
@@ -11,6 +12,45 @@ namespace CSharpSerialiser
         #endregion
 
         #region Methods
+        public static string ToCamelCase(string input)
+        {
+            if (input.Length == 0)
+            {
+                return "null";
+            }
+
+            input = Regex.Replace((string)input, "([A-Z])([A-Z]+)($|[A-Z])",
+                m => m.Groups[1].Value + m.Groups[2].Value.ToLowerInvariant() + m.Groups[3].Value);
+
+            return char.ToLowerInvariant(input[0]) + input.Substring(1);
+        }
+        public static string ToUpperCamelCase(string input)
+        {
+            if (input.Length == 0)
+            {
+                return "Null";
+            }
+
+            input = Regex.Replace((string)input, "([A-Z])([A-Z]+)($|[A-Z])",
+                m => m.Groups[1].Value + m.Groups[2].Value.ToLowerInvariant() + m.Groups[3].Value);
+            return char.ToUpperInvariant(input[0]) + input.Substring(1);
+        }
+        public static string ToCamelCase(ClassName input)
+        {
+            return ToCamelCase(input.Value);
+        }
+
+        public static string ToTitleCase(string input)
+        {
+            var first = input[0];
+            if (Char.IsUpper(first))
+            {
+                return input;
+            }
+
+            return Char.ToUpperInvariant(first) + input.Substring(1);
+        }
+
         public static string MakeGenericType(ClassType type)
         {
             if (type.CollectionType == CollectionType.List || type.CollectionType == CollectionType.Array)

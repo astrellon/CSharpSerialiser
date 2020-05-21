@@ -15,15 +15,16 @@ namespace CSharpSerialiser
         {
             if (!skipStartObject)
                 output.WriteStartObject();
-            output.WriteString("TypeNameRegex", input.TypeNameRegex);
-            output.WriteString("TypeField", input.TypeField);
+            output.WriteString("typeNameRegex", input.TypeNameRegex);
+            output.WriteString("typeField", input.TypeField);
             output.WriteEndObject();
         }
+
         public static CSharpSerialiser.Config.FindBaseClass ReadFindBaseClass(JsonElement input)
         {
-            var TypeNameRegex = input.GetProperty("TypeNameRegex").GetString();
-            var TypeField = input.GetProperty("TypeField").GetString();
-            return new CSharpSerialiser.Config.FindBaseClass(TypeNameRegex, TypeField);
+            var typeNameRegex = input.GetProperty("typeNameRegex").GetString();
+            var typeField = input.GetProperty("typeField").GetString();
+            return new CSharpSerialiser.Config.FindBaseClass(typeNameRegex, typeField);
         }
     }
 }

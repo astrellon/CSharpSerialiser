@@ -23,7 +23,7 @@ namespace CSharpSerialiser
                 var filename = $"{CodeGeneratorUtils.GetPrimitiveName(classBaseObject.FullName)}BinarySerialiser.cs";
                 var outputFile = Path.Combine(folder, filename);
 
-                using (var file = File.OpenWrite(outputFile))
+                using (var file = File.Open(outputFile, FileMode.Create))
                 {
                     SaveToStream(manager, classBaseObject, file);
                 }
@@ -34,7 +34,7 @@ namespace CSharpSerialiser
                 var filename = $"{CodeGeneratorUtils.GetPrimitiveName(classObject.FullName)}BinarySerialiser.cs";
                 var outputFile = Path.Combine(folder, filename);
 
-                using (var file = File.OpenWrite(outputFile))
+                using (var file = File.Open(outputFile, FileMode.Create))
                 {
                     SaveToStream(manager, classObject, file);
                 }
@@ -333,14 +333,20 @@ namespace CSharpSerialiser
                 throw new Exception($"Unable to determin ctor parameters for: {classObject.FullName}");
             }
 
-            var ctorArgs = string.Join(", ", fieldOrder.Select(f => f.Name));
+            var ctorArgs = string.Join(", ", fieldOrder.Select(f => f.Name).Select(CodeGeneratorUtils.ToCamelCase));
             var generics = CodeGeneratorUtils.CreateGenericClassString(classObject.Generics);
             writer.WriteLine($"return new {classObject.FullName.Value}{generics}({ctorArgs});");
         }
 
         private static void ReadField(Manager manager, ClassField classField, IndentedTextWriter writer)
         {
-             writer.WriteLine($"var {classField.Name} = {ReadFieldType(manager, classField.Name + "Value", classField.Type, 0, writer)};");
+            var varString = CodeGeneratorUtils.ToCamelCase(classField.Name);
+            var valueString = ReadFieldType(manager, $"{classField.Name}Value", classField.Type, 0, writer);
+
+            if (varString != valueString)
+            {
+                writer.WriteLine($"var {varString} = {valueString};");
+            }
         }
 
         private static string ReadFieldType(Manager manager, string resultName, ClassType classType, int depth, IndentedTextWriter writer)
@@ -371,18 +377,19 @@ namespace CSharpSerialiser
             }
             else if (classType.CollectionType == CollectionType.List || classType.CollectionType == CollectionType.Array)
             {
-                var countName = $"count{resultName}";
+                var countName = $"count{CodeGeneratorUtils.ToTitleCase(resultName)}";
                 var genericType = classType.GenericTypes.First();
                 var genericTypeName = CodeGeneratorUtils.MakeGenericType(classType);
                 var depthStr = depth == 0 ? "" : depth.ToString();
                 var indexString = CodeGeneratorUtils.MakeIndexIterator(depth);
+                resultName = CodeGeneratorUtils.ToCamelCase(resultName);
 
                 writer.WriteLine($"var {countName} = input.ReadInt32();");
                 writer.WriteLine($"var {resultName} = new {genericTypeName}({countName});");
                 writer.WriteLine($"for (var {indexString} = 0; {indexString} < {countName}; {indexString}++)");
                 writer.WriteLine("{");
                 writer.Indent++;
-                writer.WriteLine($"{resultName}.Add({ReadFieldType(manager, resultName + "_", genericType, depth + 1, writer)});");
+                writer.WriteLine($"{resultName}.Add({ReadFieldType(manager, resultName + indexString.ToUpperInvariant(), genericType, depth + 1, writer)});");
                 writer.Indent--;
                 writer.WriteLine("}");
 
@@ -390,7 +397,7 @@ namespace CSharpSerialiser
             }
             else if (classType.CollectionType == CollectionType.Dictionary)
             {
-                var countName = $"count{resultName}";
+                var countName = $"count{CodeGeneratorUtils.ToTitleCase(resultName)}";
                 var keyType = classType.GenericTypes[0];
                 var valueType = classType.GenericTypes[1];
                 var depthStr = depth == 0 ? "" : depth.ToString();
@@ -398,6 +405,7 @@ namespace CSharpSerialiser
                 var valueName = $"value{depthStr}";
                 var indexName = CodeGeneratorUtils.MakeIndexIterator(depth);
                 var genericName = CodeGeneratorUtils.MakeGenericType(classType);
+                resultName = CodeGeneratorUtils.ToCamelCase(resultName);
 
                 writer.WriteLine($"var {countName} = input.ReadInt32();");
                 writer.WriteLine($"var {resultName} = new {genericName}();");

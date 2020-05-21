@@ -71,10 +71,12 @@ namespace CSharpSerialiser
         public readonly bool IsBool;
         public readonly DefinitionType DefinitionType;
         public readonly IReadOnlyList<IReadOnlyList<Vector2>> Positions;
-        public readonly IReadOnlyDictionary<int, Vector2> BonusPositions;
+        public readonly IReadOnlyDictionary<Vector2, Vector2> BonusPositions;
+        public readonly IReadOnlyDictionary<string, int> KeyValues;
+        public readonly IReadOnlyDictionary<int, bool> KeyValues2;
         public readonly IReadOnlyList<Component> MapComponents;
 
-        public Definition(string name, int age, bool isBool, DefinitionType definitionType, IReadOnlyList<IReadOnlyList<Vector2>> positions, IReadOnlyDictionary<int, Vector2> bonusPositions, IReadOnlyList<Component> mapComponents)
+        public Definition(string name, int age, bool isBool, DefinitionType definitionType, IReadOnlyList<IReadOnlyList<Vector2>> positions, IReadOnlyDictionary<Vector2, Vector2> bonusPositions, IReadOnlyList<Component> mapComponents, IReadOnlyDictionary<string, int> keyValues, IReadOnlyDictionary<int, bool> keyValues2)
         {
             this.Name = name;
             this.Age = age;
@@ -83,6 +85,8 @@ namespace CSharpSerialiser
             this.Positions = positions;
             this.BonusPositions = bonusPositions;
             this.MapComponents = mapComponents;
+            this.KeyValues = keyValues;
+            this.KeyValues2 = keyValues2;
         }
     }
 
@@ -109,20 +113,32 @@ namespace CSharpSerialiser
         {
             var name = "NAME_" + Rand.Next();
             var positions = new List<List<Vector2>>();
-            // for (var i = 0; i < 100; i++)
-            // {
-            //     var positions_ = new List<Vector2>();
-            //     for (var j = 0; j < 100; j++)
-            //     {
-            //         positions_.Add(RandomVec2());
-            //     }
-            //     //positions.Add(positions_);
-            // }
+            for (var i = 0; i < 0; i++)
+            {
+                var positions_ = new List<Vector2>();
+                for (var j = 0; j < 4; j++)
+                {
+                    positions_.Add(RandomVec2());
+                }
+                positions.Add(positions_);
+            }
 
-            var bonusPositions = new Dictionary<int, Vector2>();
+            var bonusPositions = new Dictionary<Vector2, Vector2>();
             for (var i = 0; i < 100; i++)
             {
-                bonusPositions[i] = RandomVec2();
+                bonusPositions[RandomVec2()] = RandomVec2();
+            }
+
+            var keyValues = new Dictionary<string, int>();
+            for (var i = 0; i < 100; i++)
+            {
+                keyValues["KEY_" + Rand.Next()] = Rand.Next();
+            }
+
+            var keyValues2 = new Dictionary<int, bool>();
+            for (var i = 0; i < 100; i++)
+            {
+                keyValues2[Rand.Next()] = Rand.NextDouble() > 0.5;
             }
 
             var comps = new List<Component>();
@@ -131,7 +147,7 @@ namespace CSharpSerialiser
                 comps.Add(RandomComp());
             }
 
-            return new Definition(name, Rand.Next(), Rand.NextDouble() > 0.5, DefinitionType.Engine, positions, bonusPositions, comps);
+            return new Definition(name, Rand.Next(), Rand.NextDouble() > 0.5, DefinitionType.Engine, positions, bonusPositions, comps, keyValues, keyValues2);
         }
 
         static Component RandomComp()
@@ -158,7 +174,7 @@ namespace CSharpSerialiser
             manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindBaseClass)));
             manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindClass)));
 
-            //CreateBinary.SaveToFolder(manager, "BinarySerialisers");
+            // CreateBinary.SaveToFolder(manager, "BinarySerialisers");
             CreateJson.SaveToFolder(manager, "JsonSerialisers");
         }
 
@@ -172,21 +188,22 @@ namespace CSharpSerialiser
         //     var store = new DefinitionStore(defs);
 
         //     var sw = new Stopwatch();
-        //     using (var file = File.Open("test.json", FileMode.Create))
-        //     using (var writer = new Utf8JsonWriter(file))
+        //     using (var file = File.Open("test.bin", FileMode.Create))
+        //     using (var writer = new BinaryWriter(file))
         //     {
         //         sw.Restart();
-        //         Doggo.Serialiser.DoggoJsonSerialiser.Write(store, writer);
+        //         CSharpSerialiserBinarySerialiser.Write(store, writer);
         //         sw.Stop();
         //     }
 
         //     Console.WriteLine($"Took {sw.ElapsedMilliseconds}ms to save");
 
-        //     using (var file = File.OpenRead("test.json"))
-        //     using (var document = JsonDocument.Parse(file))
+        //     sw.Restart();
+        //     using (var file = File.OpenRead("test.bin"))
+        //     //using (var document = JsonDocument.Parse(file))
+        //     using (var reader = new BinaryReader(file))
         //     {
-        //         sw.Restart();
-        //         Doggo.Serialiser.DoggoJsonSerialiser.ReadDefinitionStore(document.RootElement);
+        //         CSharpSerialiserBinarySerialiser.ReadDefinitionStore(reader);
         //         sw.Stop();
         //     }
 
