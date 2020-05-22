@@ -19,6 +19,9 @@ namespace CSharpSerialiser
         private readonly Dictionary<ClassName, ClassBaseObject> classBaseObjectMap = new Dictionary<ClassName, ClassBaseObject>();
         public IReadOnlyDictionary<ClassName, ClassBaseObject> ClassBaseObjectMap => this.classBaseObjectMap;
 
+        private readonly Dictionary<ClassName, ClassStub> classStubMap = new Dictionary<ClassName, ClassStub>();
+        public IReadOnlyDictionary<ClassName, ClassStub> ClassStubMap => this.classStubMap;
+
         #endregion
 
         #region Constructor
@@ -30,6 +33,12 @@ namespace CSharpSerialiser
         #endregion
 
         #region Methods
+        public void AddClassStub(ClassStub classStub)
+        {
+            Console.WriteLine($"Adding class stub: {classStub.FullName}");
+            this.classStubMap[classStub.FullName] = classStub;
+        }
+
         public void AddClass(ClassObject classObject)
         {
             Console.WriteLine($"Adding class: {classObject.FullName.Value}");
@@ -49,7 +58,14 @@ namespace CSharpSerialiser
 
         public bool IsKnownClassOrBase(ClassName className)
         {
-            return this.classMap.ContainsKey(className) || this.classBaseObjectMap.ContainsKey(className);
+            return this.classMap.ContainsKey(className) ||
+                this.classBaseObjectMap.ContainsKey(className) ||
+                this.classStubMap.ContainsKey(className);
+        }
+
+        public ClassStub CreateStubFromType(Type type)
+        {
+            return new ClassStub(new ClassName(type.FullName));
         }
 
         public ClassObject CreateObjectFromType(Type type, ClassBaseObject baseObject = null)
@@ -97,7 +113,7 @@ namespace CSharpSerialiser
             return new ClassObject(new ClassName(type.FullName), fields, allCtorFields, classGenerics, baseObject);
         }
 
-        public ClassBaseObject AddBaseObjectFromType(Type type, string typeDiscriminatorName, Type interfaceBase)
+        public ClassBaseObject AddBaseObjectFromType(Type type, string typeDiscriminatorName, Type interfaceBase = null)
         {
             var subclasses = Manager.GetEnumerableOfType(type);
             if (!subclasses.Any())
