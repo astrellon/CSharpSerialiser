@@ -166,49 +166,91 @@ namespace CSharpSerialiser
         // {
         //     var manager = new Manager(new string[]{"CSharpSerialiser"}, "CSharpSerialiser");
 
-        //     // manager.AddBaseObjectFromType(typeof(Component), "CompType");
-        //     // manager.AddClass(manager.CreateObjectFromType(typeof(Vector2)));
-        //     // manager.AddClass(manager.CreateObjectFromType(typeof(Definition)));
-        //     // manager.AddClass(manager.CreateObjectFromType(typeof(DefinitionStore)));
-        //     manager.AddClass(manager.CreateObjectFromType(typeof(Config)));
-        //     manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindBaseClass)));
-        //     manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindClass)));
+        //     manager.AddBaseObjectFromType(typeof(Component), "CompType");
+        //     manager.AddClass(manager.CreateObjectFromType(typeof(Vector2)));
+        //     manager.AddClass(manager.CreateObjectFromType(typeof(Definition)));
+        //     manager.AddClass(manager.CreateObjectFromType(typeof(DefinitionStore)));
+        //     // manager.AddClass(manager.CreateObjectFromType(typeof(Config)));
+        //     // manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindBaseClass)));
+        //     // manager.AddClass(manager.CreateObjectFromType(typeof(Config.FindClass)));
 
         //     CreateBinary.SaveToFolder(manager, "BinarySerialisers");
-        //     CreateJson.SaveToFolder(manager, "JsonSerialisers");
+        //     //CreateJson.SaveToFolder(manager, "JsonSerialisers");
         // }
 
-        // static void Main(string[] args)
-        // {
-        //     var defs = new List<Definition>();
-        //     for (var i = 0; i < 10000; i++)
-        //     {
-        //         defs.Add(RandomDef());
-        //     }
-        //     var store = new DefinitionStore(defs);
+        static void Main(string[] args)
+        {
+            var defs = new List<Definition>();
+            for (var i = 0; i < 10000; i++)
+            {
+                defs.Add(RandomDef());
+            }
+            var store = new DefinitionStore(defs);
 
-        //     var sw = new Stopwatch();
-        //     using (var file = File.Open("test.bin", FileMode.Create))
-        //     using (var writer = new BinaryWriter(file))
-        //     {
-        //         sw.Restart();
-        //         CSharpSerialiserBinarySerialiser.Write(store, writer);
-        //         sw.Stop();
-        //     }
+            var config = new Ceras.SerializerConfig();
+            config.Advanced.ReadonlyFieldHandling = Ceras.ReadonlyFieldHandling.Members;
+            config.KnownTypes.Add(typeof(Definition));
+            config.KnownTypes.Add(typeof(Vector2));
+            config.KnownTypes.Add(typeof(DefinitionStore));
+            config.KnownTypes.Add(typeof(Component));
+            config.KnownTypes.Add(typeof(AirportComponent));
+            config.KnownTypes.Add(typeof(SeaportComponent));
+            config.KnownTypes.Add(typeof(List<Component>));
+            config.KnownTypes.Add(typeof(List<Definition>));
+            config.KnownTypes.Add(typeof(List<List<Vector2>>));
+            config.KnownTypes.Add(typeof(Dictionary<Vector2, Vector2>));
+            config.KnownTypes.Add(typeof(Dictionary<int, bool>));
+            config.KnownTypes.Add(typeof(Dictionary<string, int>));
+            config.ConfigType<Definition>().ConstructBy(typeof(Definition).GetConstructors()[0]);
+            config.ConfigType<Vector2>().ConstructBy(typeof(Vector2).GetConstructors()[0]);
+            config.ConfigType<DefinitionStore>().ConstructBy(typeof(DefinitionStore).GetConstructors()[0]);
+            config.ConfigType<Component>().ConstructBy(typeof(Component).GetConstructors()[0]);
+            config.ConfigType<AirportComponent>().ConstructBy(typeof(AirportComponent).GetConstructors()[0]);
+            config.ConfigType<SeaportComponent>().ConstructBy(typeof(SeaportComponent).GetConstructors()[0]);
+            var ceras = new Ceras.CerasSerializer(config);
 
-        //     Console.WriteLine($"Took {sw.ElapsedMilliseconds}ms to save");
+            var sw = new Stopwatch();
+            using (var file = File.Open("testCeras.bin", FileMode.Create))
+            {
+                sw.Restart();
+                var bytes = ceras.Serialize(store);
+                file.Write(bytes);
+                sw.Stop();
+            }
 
-        //     sw.Restart();
-        //     using (var file = File.OpenRead("test.bin"))
-        //     //using (var document = JsonDocument.Parse(file))
-        //     using (var reader = new BinaryReader(file))
-        //     {
-        //         CSharpSerialiserBinarySerialiser.ReadDefinitionStore(reader);
-        //         sw.Stop();
-        //     }
+            Console.WriteLine($"Took Ceras {sw.ElapsedMilliseconds}ms to save");
+            sw.Restart();
 
-        //     Console.WriteLine($"Took {sw.ElapsedMilliseconds}ms to read");
-        // }
+            using (var file = File.Open("testCS.bin", FileMode.Create))
+            using (var writer = new BinaryWriter(file))
+            {
+                sw.Restart();
+                CSharpSerialiserBinarySerialiser.Write(store, writer);
+                sw.Stop();
+            }
+
+            Console.WriteLine($"Took CS {sw.ElapsedMilliseconds}ms to save");
+
+            {
+                var bytes = File.ReadAllBytes("testCeras.bin");
+                sw.Restart();
+                ceras.Deserialize<DefinitionStore>(bytes);
+                //CSharpSerialiserBinarySerialiser.ReadDefinitionStore(reader);
+                sw.Stop();
+            }
+
+            Console.WriteLine($"Took Ceras {sw.ElapsedMilliseconds}ms to read");
+
+            using (var file = File.OpenRead("testCS.bin"))
+            using (var reader = new BinaryReader(file))
+            {
+                sw.Restart();
+                CSharpSerialiserBinarySerialiser.ReadDefinitionStore(reader);
+                sw.Stop();
+            }
+
+            Console.WriteLine($"Took CS {sw.ElapsedMilliseconds}ms to read");
+        }
 
         //     // var sw = new Stopwatch();
 
@@ -280,24 +322,36 @@ namespace CSharpSerialiser
         //     CreateJson.SaveToFolder(manager, "JsonSerialisers");
         // }
 
-        static void Main(string[] args)
+        // static void Main(string[] args)
+        // {
+        //     var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(@"/home/alan/git/three-divers/product/common/bin/Debug/netstandard2.0/common.dll");
+
+        //     var manager = new Manager(new []{"ThreeDivers", "Serialisers"}, "ThreeDivers");
+
+        //     foreach (var module in assembly.GetModules())
+        //     {
+        //         TryAddType(manager, module, "ThreeDivers.Latlng");
+        //         TryAddStubType(manager, module, "ThreeDivers.MapNodeId");
+        //         TryAddStubType(manager, module, "ThreeDivers.MapComponentId");
+        //         TryAddStubType(manager, module, "ThreeDivers.Country");
+        //         TryAddBaseType(manager, module, "ThreeDivers.MapComponentData", "ComponentType", null);
+        //         TryAddType(manager, module, "ThreeDivers.MapNode");
+        //     }
+
+        //     CreateJson.SaveToFolder(manager, "ThreeDiversJsonSerialisers");
+        // }
+
+        private static bool TryAddStubType(Manager manager, Module module, string typeName)
         {
-            var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(@"/home/alan/git/three-divers/product/common/bin/Debug/netstandard2.0/common.dll");
-
-            var manager = new Manager(new []{"ThreeDivers", "Serialisers"}, "ThreeDivers");
-
-            foreach (var module in assembly.GetModules())
+            var type = module.GetType(typeName);
+            if (type != null)
             {
-                TryAddType(manager, module, "ThreeDivers.Latlng");
-                TryAddType(manager, module, "ThreeDivers.MapNodeId");
-                TryAddType(manager, module, "ThreeDivers.MapComponentId");
-                TryAddBaseType(manager, module, "ThreeDivers.MapComponentData", "ComponentType", null);
-                TryAddType(manager, module, "ThreeDivers.MapNode");
+                manager.AddClassStub(manager.CreateStubFromType(type));
+                return true;
             }
 
-            CreateJson.SaveToFolder(manager, "ThreeDiversJsonSerialisers");
+            return false;
         }
-
         private static bool TryAddType(Manager manager, Module module, string typeName)
         {
             var type = module.GetType(typeName);
