@@ -1,6 +1,7 @@
 {
     "nameSpace": ["CSharpSerialiser"],
     "baseSerialiserClassName": "CSharpSerialiser",
+    "targetProject": "./CSharpSerialiser.csproj",
     "findBaseClasses": [
         {
             "typeNameRegex": "CSharpSerialiser.Config+FormatConfig",

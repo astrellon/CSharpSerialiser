@@ -59,6 +59,8 @@ namespace CSharpSerialiser
         #region Fields
         public readonly IReadOnlyList<string> NameSpace;
         public readonly string BaseSerialiserClassName;
+        public readonly string TargetProject;
+
         public readonly IReadOnlyList<FindBaseClass> FindBaseClasses;
         public readonly IReadOnlyList<FindClass> FindClasses;
         public readonly IReadOnlyList<FindClass> FindClassStubs;
@@ -66,10 +68,11 @@ namespace CSharpSerialiser
         #endregion
 
         #region Constructor
-        public Config(IReadOnlyList<string> nameSpace, string baseSerialiserClassName, IReadOnlyList<FindBaseClass> findBaseClasses, IReadOnlyList<FindClass> findClasses, IReadOnlyList<FindClass> findClassStubs, IReadOnlyList<FormatConfig> formatConfigs)
+        public Config(IReadOnlyList<string> nameSpace, string baseSerialiserClassName, string targetProject, IReadOnlyList<FindBaseClass> findBaseClasses, IReadOnlyList<FindClass> findClasses, IReadOnlyList<FindClass> findClassStubs, IReadOnlyList<FormatConfig> formatConfigs)
         {
             this.NameSpace = nameSpace;
             this.BaseSerialiserClassName = baseSerialiserClassName;
+            this.TargetProject = targetProject;
             this.FindBaseClasses = findBaseClasses;
             this.FindClasses = findClasses;
             this.FindClassStubs = findClassStubs;

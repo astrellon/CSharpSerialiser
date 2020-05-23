@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.Loader;
 using System.IO;
 using System.Text.Json;
+using System.Xml;
+using System.Runtime.Loader;
 
 namespace CSharpSerialiser
 {
@@ -282,12 +281,14 @@ namespace CSharpSerialiser
 
         static void Main(string[] args)
         {
-            using (var file = File.OpenRead("selfConfig.json"))
+            using (var file = File.OpenRead("spaceDoggoConfig.json"))
             {
                 var json = JsonDocument.Parse(file);
                 var config = CSharpSerialiserJsonSerialiser.ReadConfig(json.RootElement);
 
                 var manager = new Manager(config.NameSpace, config.BaseSerialiserClassName);
+
+                LoadTargetProject(config.TargetProject);
 
                 foreach (var findBaseClass in config.FindBaseClasses)
                 {
@@ -331,6 +332,67 @@ namespace CSharpSerialiser
         //     CreateJson.SaveToFolder(manager, "ThreeDiversJsonSerialisers");
         // }
 
+        private static void LoadTargetProject(string targetFile)
+        {
+            if (string.IsNullOrWhiteSpace(targetFile))
+            {
+                return;
+            }
+
+            var xmlDoc = new XmlDocument();
+            xmlDoc.Load(targetFile);
+
+            if (xmlDoc.DocumentElement.Name != "Project")
+            {
+                throw new Exception("Unknown target project");
+            }
+
+            if (xmlDoc.DocumentElement.GetAttribute("Sdk") == "Microsoft.NET.Sdk")
+            {
+                // dotnet core project
+                var targetFramework = xmlDoc.SelectSingleNode("//PropertyGroup/TargetFramework").InnerText;
+
+                var filename = Path.GetFileNameWithoutExtension(targetFile) + ".dll";
+
+                var filepath = Path.Combine(Path.GetFullPath(Path.GetDirectoryName(targetFile)), "bin", "Debug", targetFramework, filename);
+
+                AssemblyLoadContext.Default.LoadFromAssemblyPath(filepath);
+            }
+            else
+            {
+                var nsmgr = new XmlNamespaceManager(xmlDoc.NameTable);
+                nsmgr.AddNamespace("m", "http://schemas.microsoft.com/developer/msbuild/2003");
+                var unityReference = xmlDoc.SelectNodes("//m:ItemGroup/m:Reference", nsmgr);
+
+                if (unityReference.Count == 0)
+                {
+                    throw new Exception("Unknown target project type");
+                }
+
+                //Console.WriteLine(unityReference);
+                foreach (XmlNode reference in unityReference)
+                {
+                    var includeText = reference.Attributes.Item(0).InnerText;
+                    if (includeText == "UnityEngine" ||
+                        includeText == "UnityEngine.CoreModule" ||
+                        includeText == "UnityEngine.SharedInternalsModule")
+                    {
+                        var path = reference.SelectSingleNode("./m:HintPath", nsmgr).InnerText;
+                        Console.WriteLine("Loading Unity DLL: " + path);
+                        AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
+                    }
+                }
+
+                var unityAssemblyName = xmlDoc.SelectSingleNode("//m:PropertyGroup/m:AssemblyName", nsmgr).InnerText;
+
+                var filename = unityAssemblyName + ".dll";
+
+                var filepath = Path.Combine(Path.GetFullPath(Path.GetDirectoryName(targetFile)), "Library", "ScriptAssemblies", filename);
+                Console.WriteLine("Loading game DLL: " + filepath);
+                AssemblyLoadContext.Default.LoadFromAssemblyPath(filepath);
+            }
+        }
+
         private static bool TryAddType(Manager manager, string typeName)
         {
             var type = Type.GetType(typeName);
@@ -338,6 +400,18 @@ namespace CSharpSerialiser
             {
                 manager.AddClass(manager.CreateObjectFromType(type));
                 return true;
+            }
+            else
+            {
+                foreach (var assembly in AssemblyLoadContext.Default.Assemblies)
+                {
+                    type = assembly.GetType(typeName);
+                    if (type != null)
+                    {
+                        manager.AddClass(manager.CreateObjectFromType(type));
+                        return true;
+                    }
+                }
             }
 
             return false;

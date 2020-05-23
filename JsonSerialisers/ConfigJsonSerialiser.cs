@@ -13,7 +13,7 @@ namespace CSharpSerialiser
         {
             if (!skipStartObject)
                 output.WriteStartObject();
-            
+
             output.WriteStartArray("nameSpace");
             foreach (var item in input.NameSpace)
             {
@@ -21,28 +21,29 @@ namespace CSharpSerialiser
             }
             output.WriteEndArray();
             output.WriteString("baseSerialiserClassName", input.BaseSerialiserClassName);
-            
+            output.WriteString("targetProject", input.TargetProject);
+
             output.WriteStartArray("findBaseClasses");
             foreach (var item in input.FindBaseClasses)
             {
                 Write(item, output);
             }
             output.WriteEndArray();
-            
+
             output.WriteStartArray("findClasses");
             foreach (var item in input.FindClasses)
             {
                 Write(item, output);
             }
             output.WriteEndArray();
-            
+
             output.WriteStartArray("findClassStubs");
             foreach (var item in input.FindClassStubs)
             {
                 Write(item, output);
             }
             output.WriteEndArray();
-            
+
             output.WriteStartArray("formatConfigs");
             foreach (var item in input.FormatConfigs)
             {
@@ -61,6 +62,7 @@ namespace CSharpSerialiser
             }
 
             var baseSerialiserClassName = input.GetProperty("baseSerialiserClassName").GetString();
+            var targetProject = input.GetProperty("targetProject").GetString();
             var findBaseClasses = new List<CSharpSerialiser.Config.FindBaseClass>();
             foreach (var value in input.GetProperty("findBaseClasses").EnumerateArray())
             {
@@ -85,7 +87,7 @@ namespace CSharpSerialiser
                 formatConfigs.Add(ReadFormatConfig(value));
             }
 
-            return new CSharpSerialiser.Config(nameSpace, baseSerialiserClassName, findBaseClasses, findClasses, findClassStubs, formatConfigs);
+            return new CSharpSerialiser.Config(nameSpace, baseSerialiserClassName, targetProject, findBaseClasses, findClasses, findClassStubs, formatConfigs);
         }
     }
 }
