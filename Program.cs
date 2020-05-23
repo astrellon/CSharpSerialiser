@@ -282,25 +282,58 @@ namespace CSharpSerialiser
 
         static void Main(string[] args)
         {
-            var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(@"/home/alan/git/three-divers/product/common/bin/Debug/netstandard2.0/common.dll");
-
-            var manager = new Manager(new []{"ThreeDivers", "Serialisers"}, "ThreeDivers");
-
-            foreach (var module in assembly.GetModules())
+            using (var file = File.OpenRead("selfConfig.json"))
             {
-                TryAddType(manager, module, "ThreeDivers.Latlng");
-                TryAddType(manager, module, "ThreeDivers.MapNodeId");
-                TryAddType(manager, module, "ThreeDivers.MapComponentId");
-                TryAddBaseType(manager, module, "ThreeDivers.MapComponentData", "ComponentType", null);
-                TryAddType(manager, module, "ThreeDivers.MapNode");
-            }
+                var json = JsonDocument.Parse(file);
+                var config = CSharpSerialiserJsonSerialiser.ReadConfig(json.RootElement);
 
-            CreateJson.SaveToFolder(manager, "ThreeDiversJsonSerialisers");
+                var manager = new Manager(config.NameSpace, config.BaseSerialiserClassName);
+
+                foreach (var findBaseClass in config.FindBaseClasses)
+                {
+                    TryAddBaseType(manager, findBaseClass.TypeNameRegex, findBaseClass.TypeField, null);
+                }
+
+                foreach (var findClass in config.FindClasses)
+                {
+                    TryAddType(manager, findClass.TypeNameRegex);
+                }
+
+                foreach (var formatConfig in config.FormatConfigs)
+                {
+                    if (formatConfig is Config.BinaryFormatConfig binaryFormat)
+                    {
+                        CreateBinary.SaveToFolder(manager, binaryFormat.OutputFolder);
+                    }
+                    else if (formatConfig is Config.JsonFormatConfig jsonFormat)
+                    {
+                        CreateJson.SaveToFolder(manager, jsonFormat.OutputFolder);
+                    }
+                }
+            }
         }
 
-        private static bool TryAddType(Manager manager, Module module, string typeName)
+        // static void Main(string[] args)
+        // {
+        //     var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(@"/home/alan/git/three-divers/product/common/bin/Debug/netstandard2.0/common.dll");
+
+        //     var manager = new Manager(new []{"ThreeDivers", "Serialisers"}, "ThreeDivers");
+
+        //     foreach (var module in assembly.GetModules())
+        //     {
+        //         TryAddType(manager, module, "ThreeDivers.Latlng");
+        //         TryAddType(manager, module, "ThreeDivers.MapNodeId");
+        //         TryAddType(manager, module, "ThreeDivers.MapComponentId");
+        //         TryAddBaseType(manager, module, "ThreeDivers.MapComponentData", "ComponentType", null);
+        //         TryAddType(manager, module, "ThreeDivers.MapNode");
+        //     }
+
+        //     CreateJson.SaveToFolder(manager, "ThreeDiversJsonSerialisers");
+        // }
+
+        private static bool TryAddType(Manager manager, string typeName)
         {
-            var type = module.GetType(typeName);
+            var type = Type.GetType(typeName);
             if (type != null)
             {
                 manager.AddClass(manager.CreateObjectFromType(type));
@@ -309,15 +342,19 @@ namespace CSharpSerialiser
 
             return false;
         }
-        private static bool TryAddBaseType(Manager manager, Module module, string typeName, string typeDiscriminatorName, string interfaceBase)
+        private static bool TryAddBaseType(Manager manager, string typeName, string typeDiscriminatorName, string interfaceBase)
         {
-            var type = module.GetType(typeName);
+            var type = Type.GetType(typeName);
             if (type != null)
             {
                 var interfaceBaseType = (Type)null;
                 if (!string.IsNullOrWhiteSpace(interfaceBase))
                 {
-                    interfaceBaseType = module.GetType(interfaceBase);
+                    interfaceBaseType = Type.GetType(interfaceBase);
+                    if (interfaceBaseType == null)
+                    {
+                        throw new Exception($"Unable to find interface base: {interfaceBase}");
+                    }
                 }
 
                 manager.AddBaseObjectFromType(type, typeDiscriminatorName, interfaceBaseType);

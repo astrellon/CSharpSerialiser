@@ -35,6 +35,20 @@ namespace CSharpSerialiser
                 Write(item, output);
             }
             output.WriteEndArray();
+            
+            output.WriteStartArray("findClassStubs");
+            foreach (var item in input.FindClassStubs)
+            {
+                Write(item, output);
+            }
+            output.WriteEndArray();
+            
+            output.WriteStartArray("formatConfigs");
+            foreach (var item in input.FormatConfigs)
+            {
+                Write(item, output);
+            }
+            output.WriteEndArray();
             output.WriteEndObject();
         }
 
@@ -59,7 +73,19 @@ namespace CSharpSerialiser
                 findClasses.Add(ReadFindClass(value));
             }
 
-            return new CSharpSerialiser.Config(nameSpace, baseSerialiserClassName, findBaseClasses, findClasses);
+            var findClassStubs = new List<CSharpSerialiser.Config.FindClass>();
+            foreach (var value in input.GetProperty("findClassStubs").EnumerateArray())
+            {
+                findClassStubs.Add(ReadFindClass(value));
+            }
+
+            var formatConfigs = new List<CSharpSerialiser.Config.FormatConfig>();
+            foreach (var value in input.GetProperty("formatConfigs").EnumerateArray())
+            {
+                formatConfigs.Add(ReadFormatConfig(value));
+            }
+
+            return new CSharpSerialiser.Config(nameSpace, baseSerialiserClassName, findBaseClasses, findClasses, findClassStubs, formatConfigs);
         }
     }
 }
