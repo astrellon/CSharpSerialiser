@@ -191,7 +191,7 @@ namespace CSharpSerialiser
             writer.WriteLine($"return new {classObject.FullName.Value}{generics}({ctorArgs});");
         }
 
-        public static void WriteOuterClass(Manager manager, ClassName className, IndentedTextWriter writer, string classSuffix, IReadOnlyList<string> usingImports, Action writeInner)
+        public static void WriteOuterClass(Manager manager, ClassName className, IndentedTextWriter writer, string classSuffix, IEnumerable<string> usingImports, Action writeInner)
         {
             writer.WriteLine($"// Auto generated {classSuffix} for {className}\n");
 

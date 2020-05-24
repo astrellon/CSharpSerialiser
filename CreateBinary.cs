@@ -143,7 +143,7 @@ namespace CSharpSerialiser
             }
         }
 
-        private static void WriteField(Manager manager, ClassField classField, IndentedTextWriter writer, string fieldNameOverride = null)
+        private static void WriteField(Manager manager, ClassField classField, IndentedTextWriter writer)
         {
             var inputFieldName = $"input.{classField.Name}";
             WriteFieldType(manager, classField.Type, inputFieldName, 0, writer);
@@ -266,7 +266,7 @@ namespace CSharpSerialiser
 
         private static void ReadField(Manager manager, ClassField classField, IndentedTextWriter writer)
         {
-            var varString = CodeGeneratorUtils.ToCamelCase(classField.Name);
+            var varString = classField.CamelCaseName;
             var valueString = ReadFieldType(manager, $"{classField.Name}", classField.Type, 0, writer);
 
             if (varString != valueString)

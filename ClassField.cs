@@ -10,6 +10,7 @@ namespace CSharpSerialiser
 
         #region Fields
         public readonly string Name;
+        public readonly string CamelCaseName;
         public readonly ClassType Type;
         #endregion
 
@@ -17,6 +18,7 @@ namespace CSharpSerialiser
         public ClassField(string name, ClassType type)
         {
             this.Name = name;
+            this.CamelCaseName = CodeGeneratorUtils.ToCamelCase(name);
             this.Type = type;
         }
         #endregion

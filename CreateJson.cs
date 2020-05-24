@@ -123,7 +123,7 @@ namespace CSharpSerialiser
                 writer.Indent++;
                 var paramName = $"{subclass.Subclass.FullName}.{classBaseObject.TypeDiscriminator.Name}";
                 writer.WriteLine("output.WriteStartObject();");
-                WriteFieldType(manager, classBaseObject.TypeDiscriminator.Type, CodeGeneratorUtils.ToCamelCase(classBaseObject.TypeDiscriminator.Name), paramName, 0, writer);
+                WriteFieldType(manager, classBaseObject.TypeDiscriminator.Type, classBaseObject.TypeDiscriminator.CamelCaseName, paramName, 0, writer);
                 writer.WriteLine($"Write({castedName}, output, true);");
                 writer.Indent--;
                 writer.WriteLine("}");
@@ -156,10 +156,10 @@ namespace CSharpSerialiser
             writer.WriteLine("output.WriteEndObject();");
         }
 
-        private static void WriteField(Manager manager, ClassField classField, IndentedTextWriter writer, string fieldNameOverride = null)
+        private static void WriteField(Manager manager, ClassField classField, IndentedTextWriter writer)
         {
             var inputFieldName = $"input.{classField.Name}";
-            WriteFieldType(manager, classField.Type, CodeGeneratorUtils.ToCamelCase(classField.Name), inputFieldName, 0, writer);
+            WriteFieldType(manager, classField.Type, classField.CamelCaseName, inputFieldName, 0, writer);
         }
 
         private static void WriteStart(IndentedTextWriter writer, ContainerType containerType, string propertyName)
@@ -295,7 +295,7 @@ namespace CSharpSerialiser
             writer.WriteLine("{");
             writer.Indent++;
 
-            var inputField = $"input.GetProperty(\"{CodeGeneratorUtils.ToCamelCase(classBaseObject.TypeDiscriminator.Name)}\")";
+            var inputField = $"input.GetProperty(\"{classBaseObject.TypeDiscriminator.CamelCaseName}\")";
             writer.WriteLine($"var type = {ReadFieldType(manager, inputField, "type", classBaseObject.TypeDiscriminator.Type, 0, writer)};");
 
             var addElse = false;
@@ -338,8 +338,8 @@ namespace CSharpSerialiser
 
         private static void ReadField(Manager manager, ClassField classField, IndentedTextWriter writer)
         {
-            var inputField = $"input.GetProperty(\"{CodeGeneratorUtils.ToCamelCase(classField.Name)}\")";
-            var varString = CodeGeneratorUtils.ToCamelCase(classField.Name);
+            var inputField = $"input.GetProperty(\"{classField.CamelCaseName}\")";
+            var varString = classField.CamelCaseName;
             var valueString = ReadFieldType(manager, inputField, $"{classField.Name}", classField.Type, 0, writer);
 
             if (varString != valueString)
