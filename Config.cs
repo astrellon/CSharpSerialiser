@@ -56,6 +56,16 @@ namespace CSharpSerialiser
             }
         }
 
+        public class SimpleJsonFormatConfig : FormatConfig
+        {
+            public const string Type = "simplejson";
+
+            public SimpleJsonFormatConfig(string outputFolder) : base(outputFolder)
+            {
+
+            }
+        }
+
         #region Fields
         public readonly IReadOnlyList<string> NameSpace;
         public readonly string BaseSerialiserClassName;

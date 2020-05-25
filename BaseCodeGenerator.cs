@@ -127,9 +127,6 @@ namespace CSharpSerialiser
 
                 this.WriteBaseClassHandler(classBaseObject, subclass, castedName);
 
-                // writer.WriteLine("output.WriteStartObject();");
-                // WriteFieldType(manager, classBaseObject.TypeDiscriminator.Type, classBaseObject.TypeDiscriminator.CamelCaseName, paramName, 0, writer);
-                writer.WriteLine($"Write({castedName}, output, true);");
                 writer.Indent--;
                 writer.WriteLine("}");
 
@@ -155,7 +152,6 @@ namespace CSharpSerialiser
             writer.WriteLine(constraints);
         }
 
-
         protected virtual void WriterClassBaseObjectMethod(string generics, string constraints, ClassBaseObject classBaseObject)
         {
             writer.Write($"public static void Write{generics}({classBaseObject.FullName.Value}{generics} input, {this.WriteObject} output)");
@@ -178,7 +174,7 @@ namespace CSharpSerialiser
             var generics = CodeGeneratorUtils.CreateGenericClassString(classBaseObject.Generics);
             var constraints = CodeGeneratorUtils.CreateGenericConstraintsString(classBaseObject.Generics);
 
-            this.WriteReadClassBaseMethod(classBaseObject, generics, readName, constraints);
+            this.WriteReadClassBaseMethod(classBaseObject, readName, generics, constraints);
             writer.WriteLine("{");
             writer.Indent++;
 

@@ -2,8 +2,8 @@
 
 using System;
 using System.IO;
-using System.Text.Json;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace CSharpSerialiser
 {
@@ -12,8 +12,11 @@ namespace CSharpSerialiser
         public static void Write(CSharpSerialiser.Config input, Utf8JsonWriter output, bool skipStartObject = false)
         {
             if (!skipStartObject)
+            {
                 output.WriteStartObject();
-
+            }
+            
+            
             output.WriteStartArray("nameSpace");
             foreach (var item in input.NameSpace)
             {
@@ -22,28 +25,28 @@ namespace CSharpSerialiser
             output.WriteEndArray();
             output.WriteString("baseSerialiserClassName", input.BaseSerialiserClassName);
             output.WriteString("targetProject", input.TargetProject);
-
+            
             output.WriteStartArray("findBaseClasses");
             foreach (var item in input.FindBaseClasses)
             {
                 Write(item, output);
             }
             output.WriteEndArray();
-
+            
             output.WriteStartArray("findClasses");
             foreach (var item in input.FindClasses)
             {
                 Write(item, output);
             }
             output.WriteEndArray();
-
+            
             output.WriteStartArray("findClassStubs");
             foreach (var item in input.FindClassStubs)
             {
                 Write(item, output);
             }
             output.WriteEndArray();
-
+            
             output.WriteStartArray("formatConfigs");
             foreach (var item in input.FormatConfigs)
             {

@@ -12,7 +12,7 @@ namespace CSharpSerialiser
     {
         static void Main(string[] args)
         {
-            using (var file = File.OpenRead("spaceDoggoConfig.json"))
+            using (var file = File.OpenRead("selfConfig.json"))
             {
                 var json = JsonDocument.Parse(file);
                 var config = CSharpSerialiserJsonSerialiser.ReadConfig(json.RootElement);
@@ -42,6 +42,11 @@ namespace CSharpSerialiser
                     {
                         var createJson = new CreateJson(manager);
                         createJson.SaveToFolder(jsonFormat.OutputFolder);
+                    }
+                    else if (formatConfig is Config.SimpleJsonFormatConfig simpleJsonFormat)
+                    {
+                        var createJsonSimple = new CreateSimpleJson(manager);
+                        createJsonSimple.SaveToFolder(simpleJsonFormat.OutputFolder);
                     }
                 }
             }
@@ -129,7 +134,12 @@ namespace CSharpSerialiser
             {
                 foreach (var type in assembly.GetTypes())
                 {
-                    if (!string.IsNullOrWhiteSpace(type.FullName) && typeName.Match(type.FullName).Success)
+                    if (string.IsNullOrWhiteSpace(type.FullName))
+                    {
+                        continue;
+                    }
+
+                    if (typeName.Match(type.FullName).Success)
                     {
                         yield return type;
                     }

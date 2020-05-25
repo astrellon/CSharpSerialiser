@@ -2,8 +2,8 @@
 
 using System;
 using System.IO;
-using System.Text.Json;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace CSharpSerialiser
 {
@@ -12,7 +12,10 @@ namespace CSharpSerialiser
         public static void Write(CSharpSerialiser.Config.FindClass input, Utf8JsonWriter output, bool skipStartObject = false)
         {
             if (!skipStartObject)
+            {
                 output.WriteStartObject();
+            }
+            
             output.WriteString("typeNameRegex", input.TypeNameRegex);
             output.WriteEndObject();
         }

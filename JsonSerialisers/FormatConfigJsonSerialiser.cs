@@ -2,8 +2,8 @@
 
 using System;
 using System.IO;
-using System.Text.Json;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace CSharpSerialiser
 {
@@ -23,6 +23,12 @@ namespace CSharpSerialiser
                 output.WriteString("type", CSharpSerialiser.Config.JsonFormatConfig.Type);
                 Write(inputCSharpSerialiserConfigJsonFormatConfig, output, true);
             }
+            else if (input is CSharpSerialiser.Config.SimpleJsonFormatConfig inputCSharpSerialiserConfigSimpleJsonFormatConfig)
+            {
+                output.WriteStartObject();
+                output.WriteString("type", CSharpSerialiser.Config.SimpleJsonFormatConfig.Type);
+                Write(inputCSharpSerialiserConfigSimpleJsonFormatConfig, output, true);
+            }
             else
             {
                 throw new Exception("Unknown base class type");
@@ -38,6 +44,10 @@ namespace CSharpSerialiser
             else if (type == CSharpSerialiser.Config.JsonFormatConfig.Type)
             {
                 return ReadJsonFormatConfig(input);
+            }
+            else if (type == CSharpSerialiser.Config.SimpleJsonFormatConfig.Type)
+            {
+                return ReadSimpleJsonFormatConfig(input);
             }
             else
             {

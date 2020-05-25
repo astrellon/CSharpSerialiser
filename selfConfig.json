@@ -4,14 +4,14 @@
     "targetProject": "./CSharpSerialiser.csproj",
     "findBaseClasses": [
         {
-            "typeNameRegex": "CSharpSerialiser.Config+FormatConfig",
+            "typeNameRegex": "CSharpSerialiser.Config\\+FormatConfig",
             "typeField": "Type"
         }
     ],
     "findClasses": [
-        { "typeNameRegex": "CSharpSerialiser.Config" },
-        { "typeNameRegex": "CSharpSerialiser.Config+FindBaseClass" },
-        { "typeNameRegex": "CSharpSerialiser.Config+FindClass" }
+        { "typeNameRegex": "CSharpSerialiser.Config$" },
+        { "typeNameRegex": "CSharpSerialiser.Config\\+FindBaseClass" },
+        { "typeNameRegex": "CSharpSerialiser.Config\\+FindClass" }
     ],
     "findClassStubs": [],
     "formatConfigs": [

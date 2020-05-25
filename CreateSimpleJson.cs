@@ -1,29 +1,27 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace CSharpSerialiser
 {
-    public class CreateJson : BaseCodeGenerator
+    public class CreateSimpleJson : BaseCodeGenerator
     {
         #region Fields
-        public override string WriteObject => "Utf8JsonWriter";
+        public override string WriteObject => "";
 
-        public override string ReadObject => "JsonElement";
+        public override string ReadObject => "JSONObject";
 
-        public override string FileSuffix => "JsonSerialiser";
+        public override string FileSuffix => "SimpleJsonSerialiser";
 
         public override IEnumerable<string> UsingImports => new []
-        { "System", "System.IO", "System.Collections.Generic", "System.Text.Json" };
-
-        private enum ContainerType
         {
-            Object, Array
-        }
+            "System", "System.Collections.Generic", "SimpleJSON"
+        };
+
         #endregion
 
         #region Constructor
-        public CreateJson(Manager manager) : base(manager)
+        public CreateSimpleJson(Manager manager) : base(manager)
         {
 
         }
@@ -33,156 +31,148 @@ namespace CSharpSerialiser
         protected override void WriteBaseClassHandler(ClassBaseObject classBaseObject, ClassBaseObject.SubclassPair subclass, string castedName)
         {
             var paramName = $"{subclass.Subclass.FullName}.{classBaseObject.TypeDiscriminator.Name}";
-            writer.WriteLine("output.WriteStartObject();");
-            WriteFieldType(classBaseObject.TypeDiscriminator.Type, classBaseObject.TypeDiscriminator.CamelCaseName, paramName, 0);
-            writer.WriteLine($"Write({castedName}, output, true);");
+            writer.WriteLine($"var result = Write({castedName});");
+            writer.WriteLine($"result[\"{classBaseObject.TypeDiscriminator.CamelCaseName}\"] = {paramName};");
+            writer.WriteLine("return result;");
         }
 
         protected override void WriteClassObjectMethod(string generics, string constraints, ClassObject classObject)
         {
-            writer.Write($"public static void Write{generics}({classObject.FullName.Value}{generics} input, {this.WriteObject} output, bool skipStartObject = false)");
+            writer.Write($"public static JSONObject Write{generics}({classObject.FullName.Value}{generics} input)");
+            writer.WriteLine(constraints);
+        }
+
+        protected override void WriterClassBaseObjectMethod(string generics, string constraints, ClassBaseObject classBaseObject)
+        {
+            writer.Write($"public static JSONObject Write{generics}({classBaseObject.FullName.Value}{generics} input)");
             writer.WriteLine(constraints);
         }
 
         protected override void WriteFields(ClassObject classObject)
         {
-            writer.WriteLine("if (!skipStartObject)");
-            writer.WriteLine("{");
-            writer.Indent++;
-            writer.WriteLine("output.WriteStartObject();");
-            writer.Indent--;
-            writer.WriteLine("}");
-            writer.WriteLine();
-
+            writer.WriteLine("var result = new JSONObject();");
             foreach (var field in classObject.Fields)
             {
                 WriteField(field);
             }
-            writer.WriteLine("output.WriteEndObject();");
+            writer.WriteLine("return result;");
         }
 
         protected override void WriteField(ClassField classField)
         {
             var inputFieldName = $"input.{classField.Name}";
-            WriteFieldType(classField.Type, classField.CamelCaseName, inputFieldName, 0);
+            var valueString = WriteFieldType(classField.Type, inputFieldName, 0);
+
+            writer.WriteLine($"result[\"{classField.CamelCaseName}\"] = {valueString};");
         }
 
-        private void WriteStart(ContainerType containerType, string propertyName)
-        {
-            var containerString = containerType.ToString();
-            if (string.IsNullOrWhiteSpace(propertyName))
-            {
-                writer.WriteLine($"output.WriteStart{containerString}();");
-            }
-            else
-            {
-                writer.WriteLine($"output.WriteStart{containerString}(\"{propertyName}\");");
-            }
-        }
-
-        private void WriteFieldType(ClassType classType, string propertyName, string paramName, int depth)
+        private string WriteFieldType(ClassType classType, string paramName, int depth)
         {
             if (classType.CollectionType == CollectionType.NotACollection)
             {
-                WriteBasicField(classType.Name, $"\"{propertyName}\"", paramName);
+                return WriteBasicField(classType.Name, paramName);
             }
             else if (classType.CollectionType == CollectionType.Enum)
             {
-                writer.WriteLine($"output.WriteNumber(\"{propertyName}\", ({classType.EnumUnderlayingType.Name}){paramName});");
+                return $"{classType.EnumUnderlayingType.Name}){paramName}";
             }
             else if (classType.CollectionType == CollectionType.Array || classType.CollectionType == CollectionType.List)
             {
                 var itemName = $"item{(depth == 0 ? "" : depth.ToString())}";
                 writer.WriteLine();
+                var arrayName = $"array{CodeGeneratorUtils.ToTitleCase(paramName.Replace(".", ""))}";
 
-                WriteStart(ContainerType.Array, propertyName);
+                writer.WriteLine($"var {arrayName} = new JSONArray();");
                 writer.WriteLine($"foreach (var {itemName} in {paramName})");
                 writer.WriteLine("{");
                 writer.Indent++;
-                WriteFieldType(classType.GenericTypes.First(), "", itemName, depth + 1);
+
+                var arrayValue = WriteFieldType(classType.GenericTypes.First(), itemName, depth + 1);
+                writer.WriteLine($"{arrayName}.Add({arrayValue});");
+
                 writer.Indent--;
                 writer.WriteLine("}");
-                writer.WriteLine("output.WriteEndArray();");
+
+                return arrayName;
             }
             else if (classType.CollectionType == CollectionType.Dictionary)
             {
                 var itemName = $"kvp{(depth == 0 ? "" : depth.ToString())}";
                 var keyName = $"{itemName}.Key";
                 var valueName = $"{itemName}.Value";
+                var objectName = $"object{CodeGeneratorUtils.ToTitleCase(paramName.Replace(".", ""))}";
 
                 writer.WriteLine();
 
                 // Simple key in dictionary
                 if (TryGetBasicJsonType(classType.GenericTypes[0].Name, out var jsonType))
                 {
-                    WriteStart(ContainerType.Object, propertyName);
+                    writer.WriteLine($"var {objectName} = new JSONObject();");
                     writer.WriteLine($"foreach (var {itemName} in {paramName})");
                     writer.WriteLine("{");
                     writer.Indent++;
 
+                    var keyString = WriteBasicField(classType.GenericTypes[0].Name, keyName);
+                    var valueString = WriteBasicField(classType.GenericTypes[1].Name, valueName);
+
                     if (jsonType != "String")
                     {
-                        keyName += ".ToString()";
+                        keyString += ".ToString()";
                     }
-                    WriteBasicField(classType.GenericTypes[1].Name, keyName, valueName);
+
+                    writer.WriteLine($"{objectName}[{keyString}] = {valueString};");
 
                     writer.Indent--;
                     writer.WriteLine("}");
-                    writer.WriteLine("output.WriteEndObject();\n");
                 }
                 // Complex key in dictionary
                 else
                 {
-                    WriteStart(ContainerType.Array, propertyName);
+                    writer.WriteLine($"var {objectName} = new JSONArray();");
                     writer.WriteLine($"foreach (var {itemName} in {paramName})");
                     writer.WriteLine("{");
                     writer.Indent++;
 
-                    writer.WriteLine("output.WriteStartObject();");
-                    writer.WriteLine($"output.WritePropertyName(\"key\");");
-                    WriteFieldType(classType.GenericTypes[0], "key", keyName, depth + 1);
+                    var keyPairName = $"keypair{(depth == 0 ? "" : depth.ToString())}";
 
-                    writer.WriteLine($"output.WritePropertyName(\"value\");");
-                    WriteFieldType(classType.GenericTypes[1], "value", valueName, depth + 1);
-                    writer.WriteLine("output.WriteEndObject();");
+                    writer.WriteLine($"var {keyPairName} = new JSONObject();");
+                    writer.WriteLine($"{keyPairName}[\"key\"] = {WriteFieldType(classType.GenericTypes[0], keyName, depth + 1)};");
+                    writer.WriteLine($"{keyPairName}[\"value\"] = {WriteFieldType(classType.GenericTypes[1], valueName, depth + 1)};");
+
+                    writer.WriteLine($"{objectName}.Add({keyPairName});");
 
                     writer.Indent--;
                     writer.WriteLine("}");
-                    writer.WriteLine("output.WriteEndArray();\n");
                 }
 
+                return objectName;
             }
+
+            return "OH NO";
         }
 
-        private void WriteBasicField(ClassName className, string propertyName, string paramName)
+        private string WriteBasicField(ClassName className, string paramName)
         {
             if (!TryGetBasicJsonType(className, out var jsonType) || manager.IsKnownClassOrBase(className))
             {
-                writer.WriteLine($"Write({paramName}, output);");
+                return $"Write({paramName})";
             }
             else
             {
-                if (propertyName == "" || propertyName == "\"\"")
-                {
-                    writer.WriteLine($"output.Write{jsonType}Value({paramName});");
-                }
-                else
-                {
-                    writer.WriteLine($"output.Write{jsonType}({propertyName}, {paramName});");
-                }
+                return paramName;
             }
-        }
-
-        protected override void WriteReadBaseClassTypeHandler(ClassBaseObject classBaseObject)
-        {
-            var inputField = $"input.GetProperty(\"{classBaseObject.TypeDiscriminator.CamelCaseName}\")";
-            writer.WriteLine($"var type = {ReadFieldType(inputField, "type", classBaseObject.TypeDiscriminator.Type, 0)};");
         }
 
         protected override void WriteReadBaseClassHandler(ClassBaseObject classBaseObject, ClassBaseObject.SubclassPair subclassPair)
         {
             var shortName = CodeGeneratorUtils.GetPrimitiveName(subclassPair.Subclass.FullName);
             writer.WriteLine($"return Read{shortName}(input);");
+        }
+
+        protected override void WriteReadBaseClassTypeHandler(ClassBaseObject classBaseObject)
+        {
+            var inputField = $"input[\"{classBaseObject.TypeDiscriminator.CamelCaseName}\"]";
+            writer.WriteLine($"var type = {ReadFieldType(inputField, "type", classBaseObject.TypeDiscriminator.Type, 0)};");
         }
 
         protected override void ReadClassInner(ClassObject classObject)
@@ -192,7 +182,7 @@ namespace CSharpSerialiser
 
         private void ReadField(ClassField classField)
         {
-            var inputField = $"input.GetProperty(\"{classField.CamelCaseName}\")";
+            var inputField = $"input[\"{classField.CamelCaseName}\"]";
             var varString = classField.CamelCaseName;
             var valueString = ReadFieldType(inputField, classField.Name, classField.Type, 0);
 
@@ -220,13 +210,18 @@ namespace CSharpSerialiser
                 else
                 {
                     var primitiveType = CodeGeneratorUtils.GetPrimitiveName(classType.Name);
-                    return $"{input}.Get{primitiveType}()";
+                    if (primitiveType == "String")
+                    {
+                        return $"{input}.Value";
+                    }
+
+                    return $"{input}.As{primitiveType}";
                 }
             }
             else if (classType.CollectionType == CollectionType.Enum)
             {
                 var primitiveType = CodeGeneratorUtils.GetPrimitiveName(classType.EnumUnderlayingType.Name);
-                return $"({classType.Name.Value}){input}.Get{primitiveType}()";
+                return $"({classType.Name.Value}){input}.As{primitiveType}";
             }
             else if (classType.CollectionType == CollectionType.List || classType.CollectionType == CollectionType.Array)
             {
@@ -237,10 +232,25 @@ namespace CSharpSerialiser
                 var indexName = $"value{depthStr}";
 
                 writer.WriteLine($"var {resultName} = new {genericTypeName}();");
-                writer.WriteLine($"foreach (var {indexName} in {input}.EnumerateArray())");
+                writer.WriteLine($"foreach (var {indexName} in {input}.Children)");
                 writer.WriteLine("{");
                 writer.Indent++;
-                writer.WriteLine($"{resultName}.Add({ReadFieldType(indexName, resultName + (depth + 1), genericType, depth + 1)});");
+
+                var readFromIter = indexName;
+
+                if (TryGetBasicJsonType(genericType.Name, out var jsonType))
+                {
+                    if (jsonType != "String")
+                    {
+                        readFromIter += $".As{jsonType}";
+                    }
+                }
+                else
+                {
+                    readFromIter += ".AsObject";
+                }
+
+                writer.WriteLine($"{resultName}.Add({ReadFieldType(readFromIter, resultName + (depth + 1), genericType, depth + 1)});");
                 writer.Indent--;
                 writer.WriteLine("}\n");
 
@@ -262,10 +272,10 @@ namespace CSharpSerialiser
 
                 if (!TryGetBasicJsonType(classType.GenericTypes[0].Name, out var jsonType))
                 {
-                    var indexKeyName = $"{indexName}.GetProperty(\"key\")";
-                    var indexValueName = $"{indexName}.GetProperty(\"value\")";
+                    var indexKeyName = $"{indexName}[\"key\"]";
+                    var indexValueName = $"{indexName}[\"value\"]";
 
-                    writer.WriteLine($"foreach (var {indexName} in {input}.EnumerateArray())");
+                    writer.WriteLine($"foreach (var {indexName} in {input}.Children)");
                     writer.WriteLine("{");
                     writer.Indent++;
 
@@ -279,13 +289,13 @@ namespace CSharpSerialiser
                 }
                 else
                 {
-                    writer.WriteLine($"foreach (var {indexName} in {input}.EnumerateObject())");
+                    writer.WriteLine($"foreach (var {indexName} in {input})");
                     writer.WriteLine("{");
                     writer.Indent++;
 
                     if (jsonType == "String")
                     {
-                        writer.WriteLine($"var {keyName} = {indexName}.Name;");
+                        writer.WriteLine($"var {keyName} = {indexName}.Key;");
                     }
                     else
                     {
