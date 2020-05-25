@@ -35,11 +35,13 @@ namespace CSharpSerialiser
                 {
                     if (formatConfig is Config.BinaryFormatConfig binaryFormat)
                     {
-                        CreateBinary.SaveToFolder(manager, binaryFormat.OutputFolder);
+                        var createBinary = new CreateBinary(manager);
+                        createBinary.SaveToFolder(binaryFormat.OutputFolder);
                     }
                     else if (formatConfig is Config.JsonFormatConfig jsonFormat)
                     {
-                        CreateJson.SaveToFolder(manager, jsonFormat.OutputFolder);
+                        var createJson = new CreateJson(manager);
+                        createJson.SaveToFolder(jsonFormat.OutputFolder);
                     }
                 }
             }
