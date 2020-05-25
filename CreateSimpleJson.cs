@@ -183,7 +183,7 @@ namespace CSharpSerialiser
         private void ReadField(ClassField classField)
         {
             var inputField = $"input[\"{classField.CamelCaseName}\"]";
-            var varString = classField.CamelCaseName;
+            var varString = classField.SafeCamelCaseName;
             var valueString = ReadFieldType(inputField, classField.Name, classField.Type, 0);
 
             if (varString != valueString)
@@ -196,26 +196,26 @@ namespace CSharpSerialiser
         {
             if (classType.CollectionType == CollectionType.NotACollection)
             {
-                if (manager.IsKnownClassOrBase(classType.Name))
+                string jsonType;
+                if (!TryGetBasicJsonType(classType.Name, out jsonType) && manager.IsKnownClassOrBase(classType.Name))
                 {
                     var fullName = CodeGeneratorUtils.GetPrimitiveName(classType.Name);
                     var readName = $"Read{fullName}";
                     if (classType.GenericTypes.Any())
                     {
                         var generics = CodeGeneratorUtils.MakeGenericType(classType);
-                        return $"{readName}<{generics}>({input})";
+                        return $"{readName}<{generics}>({input}.AsObject)";
                     }
-                    return $"{readName}({input})";
+                    return $"{readName}({input}.AsObject)";
                 }
                 else
                 {
-                    var primitiveType = CodeGeneratorUtils.GetPrimitiveName(classType.Name);
-                    if (primitiveType == "String")
+                    if (jsonType == "String")
                     {
                         return $"{input}.Value";
                     }
 
-                    return $"{input}.As{primitiveType}";
+                    return $"{input}.As{jsonType}";
                 }
             }
             else if (classType.CollectionType == CollectionType.Enum)
@@ -322,13 +322,32 @@ namespace CSharpSerialiser
             {
                 var primitiveType = CodeGeneratorUtils.GetPrimitiveName(className);
                 if (primitiveType.Contains("int", StringComparison.OrdinalIgnoreCase) ||
-                    primitiveType.Contains("long", StringComparison.OrdinalIgnoreCase) ||
-                    primitiveType.Contains("byte", StringComparison.OrdinalIgnoreCase) ||
+                    primitiveType.Contains("uint", StringComparison.OrdinalIgnoreCase) ||
                     primitiveType.Contains("short", StringComparison.OrdinalIgnoreCase) ||
-                    primitiveType.Contains("double", StringComparison.OrdinalIgnoreCase) ||
-                    primitiveType.Contains("single", StringComparison.OrdinalIgnoreCase))
+                    primitiveType.Contains("ushort", StringComparison.OrdinalIgnoreCase) ||
+                    primitiveType.Contains("byte", StringComparison.OrdinalIgnoreCase) ||
+                    primitiveType.Contains("sbyte", StringComparison.OrdinalIgnoreCase))
                 {
-                    result = "Number";
+                    result = "Int";
+                    return true;
+                }
+
+                if (primitiveType.Contains("long", StringComparison.OrdinalIgnoreCase) ||
+                    primitiveType.Contains("ulong", StringComparison.OrdinalIgnoreCase))
+                {
+                    result = "Long";
+                    return true;
+                }
+
+                if (primitiveType.Contains("single", StringComparison.OrdinalIgnoreCase))
+                {
+                    result = "Float";
+                    return true;
+                }
+
+                if (primitiveType.Contains("double", StringComparison.OrdinalIgnoreCase))
+                {
+                    result = "Double";
                     return true;
                 }
 
@@ -340,7 +359,7 @@ namespace CSharpSerialiser
 
                 if (primitiveType.EndsWith("Boolean", StringComparison.OrdinalIgnoreCase))
                 {
-                    result = "Boolean";
+                    result = "Bool";
                     return true;
                 }
             }

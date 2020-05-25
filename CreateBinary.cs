@@ -102,7 +102,7 @@ namespace CSharpSerialiser
 
         private void ReadField(ClassField classField)
         {
-            var varString = classField.CamelCaseName;
+            var varString = classField.SafeCamelCaseName;
             var valueString = ReadFieldType($"{classField.Name}", classField.Type, 0);
 
             if (varString != valueString)

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 using System.CodeDom.Compiler;
 
@@ -10,6 +11,10 @@ namespace CSharpSerialiser
     {
         #region Fields
         public static readonly IReadOnlyList<char> IndexIterators = new []{'i', 'j', 'k', 'l'};
+        public static readonly HashSet<string> CSharpKeywords = new HashSet<string>(new []
+        {
+            "abstract", "as", "base", "bool", " break", "byte", "case", "catch", " char", "checked", "class", "const", " continue", "decimal", "default", "delegate", " do", "double", "else", "enum", " event", "explicit", "extern", "false", " finally", "fixed", "float", "for", " foreach", "goto", "if", "implicit", " in", "int", "interface", "internal", " is", "lock", "long", "namespace", " new", "null", "object", "operator", " out", "override", "params", "private", " protected", "public", "readonly", "ref", " return", "sbyte", "sealed", "short", " sizeof", "stackalloc", "static", "string", " struct", "switch", "this", "throw", " true", "try", "typeof", "uint", " ulong", "unchecked", "unsafe", "ushort", " using", "virtual", "void", "volatile", "while"
+        });
 
         public delegate void ReadFieldHandler(Manager manager, ClassField field, IndentedTextWriter writer);
         #endregion
@@ -186,7 +191,7 @@ namespace CSharpSerialiser
                 throw new Exception($"Unable to determin ctor parameters for: {classObject.FullName}");
             }
 
-            var ctorArgs = string.Join(", ", finalFieldOrder.Select(f => f.Name).Select(CodeGeneratorUtils.ToCamelCase));
+            var ctorArgs = string.Join(", ", finalFieldOrder.Select(f => f.SafeCamelCaseName));
             var generics = CodeGeneratorUtils.CreateGenericClassString(classObject.Generics);
             writer.WriteLine($"return new {classObject.FullName.Value}{generics}({ctorArgs});");
         }

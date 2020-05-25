@@ -11,6 +11,7 @@ namespace CSharpSerialiser
         #region Fields
         public readonly string Name;
         public readonly string CamelCaseName;
+        public readonly string SafeCamelCaseName;
         public readonly ClassType Type;
         #endregion
 
@@ -19,6 +20,13 @@ namespace CSharpSerialiser
         {
             this.Name = name;
             this.CamelCaseName = CodeGeneratorUtils.ToCamelCase(name);
+
+            this.SafeCamelCaseName = this.CamelCaseName;
+
+            if (CodeGeneratorUtils.CSharpKeywords.Contains(this.CamelCaseName))
+            {
+                this.SafeCamelCaseName = "@" + this.SafeCamelCaseName;
+            }
             this.Type = type;
         }
         #endregion
