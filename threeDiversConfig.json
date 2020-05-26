@@ -1,0 +1,36 @@
+{
+    "nameSpace": ["ThreeDivers", "Serialiser"],
+    "baseSerialiserClassName": "ThreeDivers",
+    "targetProject": "/home/alan/git/three-divers/product/common/common.csproj",
+    "findBaseClasses": [
+        {
+            "typeNameRegex": "ThreeDivers.MapComponentData$",
+            "typeField": "ComponentType"
+        }
+    ],
+    "findClasses": [
+        { "typeNameRegex": "ThreeDivers.+Id$" },
+        { "typeNameRegex": "ThreeDivers.Latlng" },
+        { "typeNameRegex": "ThreeDivers.MapNode$" },
+        { "typeNameRegex": "ThreeDivers.MapStoreUpdateMetadata$" },
+        { "typeNameRegex": "ThreeDivers.RemoveMapComponent$" },
+        { "typeNameRegex": "ThreeDivers.RemoveMapNode$" },
+        { "typeNameRegex": "ThreeDivers.UpdateMapComponent$" },
+        { "typeNameRegex": "ThreeDivers.UpdateMapNode$" },
+        { "typeNameRegex": "ThreeDivers.Linescape.Terminal" }
+    ],
+    "findClassStubs": [
+        { "typeNameRegex": "ThreeDivers.Country$" },
+        { "typeNameRegex": "System.TimeSpan" }
+    ],
+    "formatConfigs": [
+        {
+            "type": "binary",
+            "outputFolder": "ThreeDiversTestBinary"
+        },
+        {
+            "type": "json",
+            "outputFolder": "ThreeDiversTestJson"
+        }
+    ]
+}
