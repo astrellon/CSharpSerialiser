@@ -1,7 +1,7 @@
 public delegate void WriteBinaryArrayItemHandler<T>(T item, BinaryWriter writer);
         public delegate T ReadBinaryArrayItemHandler<T>(BinaryReader input);
 
-        public static void Write<T>(IReadOnlyList<T> input, BinaryWriter writer, WriteBinaryArrayItemHandler<T> itemHandler)
+        public static void Write<T>(IReadOnlyCollection<T> input, BinaryWriter writer, WriteBinaryArrayItemHandler<T> itemHandler)
         {
             writer.Write(input.Count);
             foreach (var item in input)
@@ -10,72 +10,72 @@ public delegate void WriteBinaryArrayItemHandler<T>(T item, BinaryWriter writer)
             }
         }
 
-        public static void Write(IReadOnlyList<string> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<string> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
         }
-        public static void Write(IReadOnlyList<char> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<char> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
         }
-        public static void Write(IReadOnlyList<byte> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<byte> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
         }
-        public static void Write(IReadOnlyList<sbyte> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<sbyte> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
         }
-        public static void Write(IReadOnlyList<ushort> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<ushort> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
         }
-        public static void Write(IReadOnlyList<short> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<short> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
         }
-        public static void Write(IReadOnlyList<uint> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<uint> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
         }
-        public static void Write(IReadOnlyList<int> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<int> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
         }
-        public static void Write(IReadOnlyList<ulong> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<ulong> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
         }
-        public static void Write(IReadOnlyList<long> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<long> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
         }
-        public static void Write(IReadOnlyList<float> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<float> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
         }
-        public static void Write(IReadOnlyList<double> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<double> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
         }
-        public static void Write(IReadOnlyList<decimal> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<decimal> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
         }
-        public static void Write(IReadOnlyList<bool> input, BinaryWriter writer)
+        public static void Write(IReadOnlyCollection<bool> input, BinaryWriter writer)
         {
             writer.Write(input.Count);
             foreach (var item in input) { writer.Write(item); }
