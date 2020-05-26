@@ -34,6 +34,7 @@ namespace CSharpSerialiser
                 throw new Exception("Unknown base class type");
             }
         }
+        
         public static Config.FormatConfig ReadConfigFormatConfig(JsonElement input)
         {
             var type = input.GetProperty("type").GetString();

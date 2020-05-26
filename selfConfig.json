@@ -16,6 +16,10 @@
     "findClassStubs": [],
     "formatConfigs": [
         {
+            "type": "binary",
+            "outputFolder": "BinarySerialisers"
+        },
+        {
             "type": "json",
             "outputFolder": "JsonSerialisers"
         }

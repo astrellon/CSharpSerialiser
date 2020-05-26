@@ -23,10 +23,11 @@ namespace CSharpSerialiser
             output.WriteString("outputFolder", input.OutputFolder);
             output.WriteEndObject();
         }
-
+        
         public static Config.SimpleJsonFormatConfig ReadConfigSimpleJsonFormatConfig(JsonElement input)
         {
             var outputFolder = input.GetProperty("outputFolder").GetString();
+            
             return new Config.SimpleJsonFormatConfig(outputFolder);
         }
     }

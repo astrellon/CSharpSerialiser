@@ -188,6 +188,7 @@ namespace CSharpSerialiser
 
             var ctorArgs = string.Join(", ", finalFieldOrder.Select(f => f.SafeCamelCaseName));
             var generics = CodeGeneratorUtils.CreateGenericClassString(classObject.Generics);
+            writer.WriteLine();
             writer.WriteLine($"return new {classObject.FullName.TrimNameSpace(manager.NameSpace)}{generics}({ctorArgs});");
         }
 

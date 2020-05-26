@@ -62,6 +62,7 @@ namespace CSharpSerialiser
                     () =>
                     {
                         WriteBaseClass(classBaseObject);
+                        writer.WriteLine();
                         ReadBaseClass(classBaseObject);
                     });
             }
@@ -76,6 +77,7 @@ namespace CSharpSerialiser
                     () =>
                     {
                         WriteClass(classObject);
+                        writer.WriteLine();
                         ReadClass(classObject);
                     });
             }
@@ -93,7 +95,7 @@ namespace CSharpSerialiser
             WriteFields(classObject);
             writer.Indent--;
 
-            writer.WriteLine("}\n");
+            writer.WriteLine("}");
         }
 
         protected virtual void WriteBaseClass(ClassBaseObject classBaseObject)

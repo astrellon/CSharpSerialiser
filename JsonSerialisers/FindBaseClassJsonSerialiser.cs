@@ -24,11 +24,12 @@ namespace CSharpSerialiser
             output.WriteString("typeField", input.TypeField);
             output.WriteEndObject();
         }
-
+        
         public static Config.FindBaseClass ReadConfigFindBaseClass(JsonElement input)
         {
             var typeNameRegex = input.GetProperty("typeNameRegex").GetString();
             var typeField = input.GetProperty("typeField").GetString();
+            
             return new Config.FindBaseClass(typeNameRegex, typeField);
         }
     }

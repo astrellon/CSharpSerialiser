@@ -10,10 +10,10 @@ namespace CSharpSerialiser
 {
     public static partial class CSharpSerialiserJsonSerialiser
     {
-        public delegate void WriteArrayItemHandler<T>(T item, Utf8JsonWriter writer);
-        public delegate T ReadArrayItemHandler<T>(JsonElement input);
+        public delegate void WriteJsonArrayItemHandler<T>(T item, Utf8JsonWriter writer);
+        public delegate T ReadJsonArrayItemHandler<T>(JsonElement input);
 
-        public static void Write<T>(IReadOnlyList<T> input, Utf8JsonWriter writer, WriteArrayItemHandler<T> itemHandler)
+        public static void Write<T>(IReadOnlyList<T> input, Utf8JsonWriter writer, WriteJsonArrayItemHandler<T> itemHandler)
         {
             writer.WriteStartArray();
             foreach (var item in input)
@@ -113,7 +113,7 @@ namespace CSharpSerialiser
             writer.WriteEndArray();
         }
 
-        public static IEnumerable<T> ReadList<T>(JsonElement input, ReadArrayItemHandler<T> itemHandler)
+        public static IEnumerable<T> ReadList<T>(JsonElement input, ReadJsonArrayItemHandler<T> itemHandler)
         {
             foreach (var item in input.EnumerateArray())
             {
@@ -148,5 +148,6 @@ namespace CSharpSerialiser
         public static IEnumerable<bool> ReadListBoolean(JsonElement input)
         {
             return input.EnumerateArray().Select(v => v.GetBoolean());
-        }}
+        }
+}
 }

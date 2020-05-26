@@ -1,0 +1,152 @@
+public delegate void WriteBinaryArrayItemHandler<T>(T item, BinaryWriter writer);
+        public delegate T ReadBinaryArrayItemHandler<T>(BinaryReader input);
+
+        public static void Write<T>(IReadOnlyList<T> input, BinaryWriter writer, WriteBinaryArrayItemHandler<T> itemHandler)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input)
+            {
+                itemHandler(item, writer);
+            }
+        }
+
+        public static void Write(IReadOnlyList<string> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+        public static void Write(IReadOnlyList<char> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+        public static void Write(IReadOnlyList<byte> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+        public static void Write(IReadOnlyList<sbyte> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+        public static void Write(IReadOnlyList<ushort> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+        public static void Write(IReadOnlyList<short> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+        public static void Write(IReadOnlyList<uint> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+        public static void Write(IReadOnlyList<int> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+        public static void Write(IReadOnlyList<ulong> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+        public static void Write(IReadOnlyList<long> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+        public static void Write(IReadOnlyList<float> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+        public static void Write(IReadOnlyList<double> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+        public static void Write(IReadOnlyList<decimal> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+        public static void Write(IReadOnlyList<bool> input, BinaryWriter writer)
+        {
+            writer.Write(input.Count);
+            foreach (var item in input) { writer.Write(item); }
+        }
+
+        public static IEnumerable<T> ReadList<T>(BinaryReader input, ReadBinaryArrayItemHandler<T> itemHandler)
+        {
+            var count = input.ReadInt32();
+            for (var i = 0; i < count; i++)
+            {
+                yield return itemHandler(input);
+            }
+        }
+
+        public static IEnumerable<string> ReadListString(BinaryReader input)
+        {
+            var count = input.ReadInt32();
+            for (var i = 0; i < count; i++) { yield return input.ReadString(); }
+        }
+        public static IEnumerable<char> ReadListChar(BinaryReader input)
+        {
+            var count = input.ReadInt32();
+            for (var i = 0; i < count; i++) { yield return input.ReadChar(); }
+        }
+        public static IEnumerable<sbyte> ReadListSByte(BinaryReader input)
+        {
+            var count = input.ReadInt32();
+            for (var i = 0; i < count; i++) { yield return input.ReadSByte(); }
+        }
+        public static IEnumerable<byte> ReadListByte(BinaryReader input)
+        {
+            var count = input.ReadInt32();
+            for (var i = 0; i < count; i++) { yield return input.ReadByte(); }
+        }
+        public static IEnumerable<ushort> ReadListUInt16(BinaryReader input)
+        {
+            var count = input.ReadInt32();
+            for (var i = 0; i < count; i++) { yield return input.ReadUInt16(); }
+        }
+        public static IEnumerable<short> ReadListInt16(BinaryReader input)
+        {
+            var count = input.ReadInt32();
+            for (var i = 0; i < count; i++) { yield return input.ReadInt16(); }
+        }
+        public static IEnumerable<uint> ReadListUInt32(BinaryReader input)
+        {
+            var count = input.ReadInt32();
+            for (var i = 0; i < count; i++) { yield return input.ReadUInt32(); }
+        }
+        public static IEnumerable<int> ReadListInt(BinaryReader input)
+        {
+            var count = input.ReadInt32();
+            for (var i = 0; i < count; i++) { yield return input.ReadInt32(); }
+        }
+        public static IEnumerable<float> ReadListSingle(BinaryReader input)
+        {
+            var count = input.ReadInt32();
+            for (var i = 0; i < count; i++) { yield return input.ReadSingle(); }
+        }
+        public static IEnumerable<double> ReadListDouble(BinaryReader input)
+        {
+            var count = input.ReadInt32();
+            for (var i = 0; i < count; i++) { yield return input.ReadDouble(); }
+        }
+        public static IEnumerable<decimal> ReadListDecimal(BinaryReader input)
+        {
+            var count = input.ReadInt32();
+            for (var i = 0; i < count; i++) { yield return input.ReadDecimal(); }
+        }
+        public static IEnumerable<bool> ReadListBoolean(BinaryReader input)
+        {
+            var count = input.ReadInt32();
+            for (var i = 0; i < count; i++) { yield return input.ReadBoolean(); }
+        }

@@ -139,7 +139,7 @@ namespace CSharpSerialiser
                 }
                 else
                 {
-                    if (TryGetBasicJsonType(genericType.Name, out var jsonType))
+                    if (TryGetReadListPrimitive(genericType.Name, out var jsonType))
                     {
                         writer.WriteLine($"Write({paramName}, output);");
                     }
@@ -166,8 +166,6 @@ namespace CSharpSerialiser
                 var keyName = $"{itemName}.Key";
                 var valueName = $"{itemName}.Value";
 
-                writer.WriteLine();
-
                 // Simple key in dictionary
                 if (TryGetBasicJsonType(classType.GenericTypes[0].Name, out var jsonType))
                 {
@@ -184,7 +182,7 @@ namespace CSharpSerialiser
 
                     writer.Indent--;
                     writer.WriteLine("}");
-                    writer.WriteLine("output.WriteEndObject();\n");
+                    writer.WriteLine("output.WriteEndObject();");
                 }
                 // Complex key in dictionary
                 else
@@ -204,8 +202,10 @@ namespace CSharpSerialiser
 
                     writer.Indent--;
                     writer.WriteLine("}");
-                    writer.WriteLine("output.WriteEndArray();\n");
+                    writer.WriteLine("output.WriteEndArray();");
                 }
+
+                writer.WriteLine();
             }
         }
 
@@ -310,11 +310,11 @@ namespace CSharpSerialiser
                         readName += $"<{generics}>";
                     }
 
-                    writer.WriteLine($"var {resultName} = new {genericTypeName}(ReadList({resultName}Json, {readName}));\n");
+                    writer.WriteLine($"var {resultName} = new {genericTypeName}(ReadList({resultName}Json, {readName}));");
                 }
                 else if (TryGetReadListPrimitive(genericType.Name, out var readListType))
                 {
-                    writer.WriteLine($"var {resultName} = new {genericTypeName}(ReadList{readListType}({resultName}Json));\n");
+                    writer.WriteLine($"var {resultName} = new {genericTypeName}(ReadList{readListType}({resultName}Json));");
                 }
                 else
                 {
@@ -324,8 +324,9 @@ namespace CSharpSerialiser
                     writer.Indent++;
                     writer.WriteLine($"{resultName}.Add({ReadFieldType(indexName, resultName + (depth + 1), genericType, depth + 1)});");
                     writer.Indent--;
-                    writer.WriteLine("}\n");
+                    writer.WriteLine("}");
                 }
+                writer.WriteLine();
 
                 return resultName;
             }
@@ -358,7 +359,7 @@ namespace CSharpSerialiser
                     writer.WriteLine($"{resultName}[{keyName}] = {valueName};");
 
                     writer.Indent--;
-                    writer.WriteLine("}\n");
+                    writer.WriteLine("}");
                 }
                 else
                 {
@@ -380,7 +381,7 @@ namespace CSharpSerialiser
                     writer.WriteLine($"{resultName}[{keyName}] = {valueName};");
 
                     writer.Indent--;
-                    writer.WriteLine("}\n");
+                    writer.WriteLine("}");
                 }
 
                 return resultName;

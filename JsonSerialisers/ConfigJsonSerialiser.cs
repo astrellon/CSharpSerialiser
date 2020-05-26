@@ -39,26 +39,27 @@ namespace CSharpSerialiser
             
             output.WriteEndObject();
         }
-
+        
         public static Config ReadConfig(JsonElement input)
         {
             var nameSpaceJson = input.GetProperty("nameSpace");
             var nameSpace = new List<System.String>(ReadListString(nameSpaceJson));
-
+            
             var baseSerialiserClassName = input.GetProperty("baseSerialiserClassName").GetString();
             var targetProject = input.GetProperty("targetProject").GetString();
             var findBaseClassesJson = input.GetProperty("findBaseClasses");
             var findBaseClasses = new List<Config.FindBaseClass>(ReadList(findBaseClassesJson, ReadConfigFindBaseClass));
-
+            
             var findClassesJson = input.GetProperty("findClasses");
             var findClasses = new List<Config.FindClass>(ReadList(findClassesJson, ReadConfigFindClass));
-
+            
             var findClassStubsJson = input.GetProperty("findClassStubs");
             var findClassStubs = new List<Config.FindClass>(ReadList(findClassStubsJson, ReadConfigFindClass));
-
+            
             var formatConfigsJson = input.GetProperty("formatConfigs");
             var formatConfigs = new List<Config.FormatConfig>(ReadList(formatConfigsJson, ReadConfigFormatConfig));
-
+            
+            
             return new Config(nameSpace, baseSerialiserClassName, targetProject, findBaseClasses, findClasses, findClassStubs, formatConfigs);
         }
     }
