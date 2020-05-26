@@ -181,7 +181,7 @@ namespace CSharpSerialiser
 
         protected override void WriteReadBaseClassHandler(ClassBaseObject classBaseObject, ClassBaseObject.SubclassPair subclassPair)
         {
-            writer.WriteLine($"return Read{this.MakeReadValueMethod(subclassPair.Subclass.FullName)}(input);");
+            writer.WriteLine($"return {this.MakeReadValueMethod(subclassPair.Subclass.FullName)}(input);");
         }
 
         protected override void ReadClassInner(ClassObject classObject)

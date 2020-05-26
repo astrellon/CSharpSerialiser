@@ -9,24 +9,24 @@ namespace CSharpSerialiser
 {
     public static partial class CSharpSerialiserJsonSerialiser
     {
-        public static void Write(CSharpSerialiser.Config.FormatConfig input, Utf8JsonWriter output)
+        public static void Write(Config.FormatConfig input, Utf8JsonWriter output)
         {
-            if (input is CSharpSerialiser.Config.BinaryFormatConfig inputCSharpSerialiserConfigBinaryFormatConfig)
+            if (input is Config.BinaryFormatConfig inputCSharpSerialiserConfigBinaryFormatConfig)
             {
                 output.WriteStartObject();
-                output.WriteString("type", CSharpSerialiser.Config.BinaryFormatConfig.Type);
+                output.WriteString("type", Config.BinaryFormatConfig.Type);
                 Write(inputCSharpSerialiserConfigBinaryFormatConfig, output, true);
             }
-            else if (input is CSharpSerialiser.Config.JsonFormatConfig inputCSharpSerialiserConfigJsonFormatConfig)
+            else if (input is Config.JsonFormatConfig inputCSharpSerialiserConfigJsonFormatConfig)
             {
                 output.WriteStartObject();
-                output.WriteString("type", CSharpSerialiser.Config.JsonFormatConfig.Type);
+                output.WriteString("type", Config.JsonFormatConfig.Type);
                 Write(inputCSharpSerialiserConfigJsonFormatConfig, output, true);
             }
-            else if (input is CSharpSerialiser.Config.SimpleJsonFormatConfig inputCSharpSerialiserConfigSimpleJsonFormatConfig)
+            else if (input is Config.SimpleJsonFormatConfig inputCSharpSerialiserConfigSimpleJsonFormatConfig)
             {
                 output.WriteStartObject();
-                output.WriteString("type", CSharpSerialiser.Config.SimpleJsonFormatConfig.Type);
+                output.WriteString("type", Config.SimpleJsonFormatConfig.Type);
                 Write(inputCSharpSerialiserConfigSimpleJsonFormatConfig, output, true);
             }
             else
@@ -34,20 +34,20 @@ namespace CSharpSerialiser
                 throw new Exception("Unknown base class type");
             }
         }
-        public static CSharpSerialiser.Config.FormatConfig ReadFormatConfig(JsonElement input)
+        public static Config.FormatConfig ReadConfigFormatConfig(JsonElement input)
         {
             var type = input.GetProperty("type").GetString();
             if (type == CSharpSerialiser.Config.BinaryFormatConfig.Type)
             {
-                return ReadBinaryFormatConfig(input);
+                return ReadConfigBinaryFormatConfig(input);
             }
             else if (type == CSharpSerialiser.Config.JsonFormatConfig.Type)
             {
-                return ReadJsonFormatConfig(input);
+                return ReadConfigJsonFormatConfig(input);
             }
             else if (type == CSharpSerialiser.Config.SimpleJsonFormatConfig.Type)
             {
-                return ReadSimpleJsonFormatConfig(input);
+                return ReadConfigSimpleJsonFormatConfig(input);
             }
             else
             {

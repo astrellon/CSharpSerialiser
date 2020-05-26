@@ -87,11 +87,6 @@ namespace CSharpSerialiser
             return new string(token, multiply);
         }
 
-        public static string MakeReadMethodName(ClassName className)
-        {
-            var shortName = GetPrimitiveName(className);
-            return $"Read{shortName}";
-        }
         public static string GetPrimitiveName(ClassName className)
         {
             var lastDot = className.Value.LastIndexOf('.');

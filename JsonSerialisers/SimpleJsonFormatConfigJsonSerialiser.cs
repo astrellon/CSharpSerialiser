@@ -9,7 +9,7 @@ namespace CSharpSerialiser
 {
     public static partial class CSharpSerialiserJsonSerialiser
     {
-        public static void Write(CSharpSerialiser.Config.SimpleJsonFormatConfig input, Utf8JsonWriter output, bool skipStartObject = false)
+        public static void Write(Config.SimpleJsonFormatConfig input, Utf8JsonWriter output, bool skipStartObject = false)
         {
             if (!skipStartObject)
             {
@@ -20,10 +20,10 @@ namespace CSharpSerialiser
             output.WriteEndObject();
         }
 
-        public static CSharpSerialiser.Config.SimpleJsonFormatConfig ReadSimpleJsonFormatConfig(JsonElement input)
+        public static Config.SimpleJsonFormatConfig ReadConfigSimpleJsonFormatConfig(JsonElement input)
         {
             var outputFolder = input.GetProperty("outputFolder").GetString();
-            return new CSharpSerialiser.Config.SimpleJsonFormatConfig(outputFolder);
+            return new Config.SimpleJsonFormatConfig(outputFolder);
         }
     }
 }

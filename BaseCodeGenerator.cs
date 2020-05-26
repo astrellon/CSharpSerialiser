@@ -32,7 +32,7 @@ namespace CSharpSerialiser
 
             foreach (var classBaseObject in this.manager.ClassBaseObjectMap.Values)
             {
-                var filename = $"{CodeGeneratorUtils.GetPrimitiveName(classBaseObject.FullName)}JsonSerialiser.cs";
+                var filename = $"{CodeGeneratorUtils.GetPrimitiveName(classBaseObject.FullName)}{this.FileSuffix}.cs";
                 var outputFile = Path.Combine(folder, filename);
 
                 using (var file = File.Open(outputFile, FileMode.Create))
@@ -120,10 +120,10 @@ namespace CSharpSerialiser
                 }
 
                 var castedName = $"input{subclass.Subclass.FullName.Value.Replace(".", "")}";
-                writer.WriteLine($"if (input is {subclass.Subclass.FullName} {castedName})");
+                writer.WriteLine($"if (input is {this.TrimNameSpace(subclass.Subclass.FullName)} {castedName})");
                 writer.WriteLine("{");
                 writer.Indent++;
-                var paramName = $"{subclass.Subclass.FullName}.{classBaseObject.TypeDiscriminator.Name}";
+                var paramName = $"{this.TrimNameSpace(subclass.Subclass.FullName)}.{classBaseObject.TypeDiscriminator.Name}";
 
                 this.WriteBaseClassHandler(classBaseObject, subclass, castedName);
 
@@ -148,13 +148,13 @@ namespace CSharpSerialiser
 
         protected virtual void WriteClassObjectMethod(string generics, string constraints, ClassObject classObject)
         {
-            writer.Write($"public static void Write{generics}({classObject.FullName.Value}{generics} input, {this.WriteObject} output)");
+            writer.Write($"public static void Write{generics}({this.TrimNameSpace(classObject.FullName)}{generics} input, {this.WriteObject} output)");
             writer.WriteLine(constraints);
         }
 
         protected virtual void WriterClassBaseObjectMethod(string generics, string constraints, ClassBaseObject classBaseObject)
         {
-            writer.Write($"public static void Write{generics}({classBaseObject.FullName.Value}{generics} input, {this.WriteObject} output)");
+            writer.Write($"public static void Write{generics}({this.TrimNameSpace(classBaseObject.FullName)}{generics} input, {this.WriteObject} output)");
             writer.WriteLine(constraints);
         }
 
@@ -170,7 +170,7 @@ namespace CSharpSerialiser
 
         protected virtual void ReadBaseClass(ClassBaseObject classBaseObject)
         {
-            var readName = CodeGeneratorUtils.MakeReadMethodName(classBaseObject.FullName);
+            var readName = this.MakeReadValueMethod(classBaseObject.FullName);
             var generics = CodeGeneratorUtils.CreateGenericClassString(classBaseObject.Generics);
             var constraints = CodeGeneratorUtils.CreateGenericConstraintsString(classBaseObject.Generics);
 
@@ -219,7 +219,7 @@ namespace CSharpSerialiser
 
         protected virtual void WriteReadClassBaseMethod(ClassBaseObject classBaseObject, string methodName, string generics, string constraints)
         {
-            writer.Write($"public static {classBaseObject.FullName.Value}{generics} {methodName}{generics}({this.ReadObject} input)");
+            writer.Write($"public static {this.TrimNameSpace(classBaseObject.FullName)}{generics} {methodName}{generics}({this.ReadObject} input)");
             writer.WriteLine(constraints);
         }
 
@@ -233,7 +233,7 @@ namespace CSharpSerialiser
 
         protected virtual void ReadClass(ClassObject classObject)
         {
-            var readName = CodeGeneratorUtils.MakeReadMethodName(classObject.FullName);
+            var readName = this.MakeReadValueMethod(classObject.FullName);
             var generics = CodeGeneratorUtils.CreateGenericClassString(classObject.Generics);
             var constraints = CodeGeneratorUtils.CreateGenericConstraintsString(classObject.Generics);
 
@@ -252,7 +252,7 @@ namespace CSharpSerialiser
 
         protected virtual string MakeReadValueMethod(ClassName className)
         {
-            var shortName = className.TrimNameSpace(this.manager.NameSpace);
+            var shortName = className.TrimNameSpace(this.manager.NameSpace).Replace(".", "");
             return "Read" + shortName;
         }
 

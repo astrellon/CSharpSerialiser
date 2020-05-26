@@ -12,7 +12,7 @@ namespace CSharpSerialiser
     {
         static void Main(string[] args)
         {
-            using (var file = File.OpenRead("spaceDoggoConfig.json"))
+            using (var file = File.OpenRead("selfConfig.json"))
             {
                 var json = JsonDocument.Parse(file);
                 var config = CSharpSerialiserJsonSerialiser.ReadConfig(json.RootElement);

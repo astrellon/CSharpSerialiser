@@ -9,7 +9,7 @@ namespace CSharpSerialiser
 {
     public static partial class CSharpSerialiserJsonSerialiser
     {
-        public static void Write(CSharpSerialiser.Config input, Utf8JsonWriter output, bool skipStartObject = false)
+        public static void Write(Config input, Utf8JsonWriter output, bool skipStartObject = false)
         {
             if (!skipStartObject)
             {
@@ -56,7 +56,7 @@ namespace CSharpSerialiser
             output.WriteEndObject();
         }
 
-        public static CSharpSerialiser.Config ReadConfig(JsonElement input)
+        public static Config ReadConfig(JsonElement input)
         {
             var nameSpace = new List<System.String>();
             foreach (var value in input.GetProperty("nameSpace").EnumerateArray())
@@ -66,31 +66,31 @@ namespace CSharpSerialiser
 
             var baseSerialiserClassName = input.GetProperty("baseSerialiserClassName").GetString();
             var targetProject = input.GetProperty("targetProject").GetString();
-            var findBaseClasses = new List<CSharpSerialiser.Config.FindBaseClass>();
+            var findBaseClasses = new List<Config.FindBaseClass>();
             foreach (var value in input.GetProperty("findBaseClasses").EnumerateArray())
             {
-                findBaseClasses.Add(ReadFindBaseClass(value));
+                findBaseClasses.Add(ReadConfigFindBaseClass(value));
             }
 
-            var findClasses = new List<CSharpSerialiser.Config.FindClass>();
+            var findClasses = new List<Config.FindClass>();
             foreach (var value in input.GetProperty("findClasses").EnumerateArray())
             {
-                findClasses.Add(ReadFindClass(value));
+                findClasses.Add(ReadConfigFindClass(value));
             }
 
-            var findClassStubs = new List<CSharpSerialiser.Config.FindClass>();
+            var findClassStubs = new List<Config.FindClass>();
             foreach (var value in input.GetProperty("findClassStubs").EnumerateArray())
             {
-                findClassStubs.Add(ReadFindClass(value));
+                findClassStubs.Add(ReadConfigFindClass(value));
             }
 
-            var formatConfigs = new List<CSharpSerialiser.Config.FormatConfig>();
+            var formatConfigs = new List<Config.FormatConfig>();
             foreach (var value in input.GetProperty("formatConfigs").EnumerateArray())
             {
-                formatConfigs.Add(ReadFormatConfig(value));
+                formatConfigs.Add(ReadConfigFormatConfig(value));
             }
 
-            return new CSharpSerialiser.Config(nameSpace, baseSerialiserClassName, targetProject, findBaseClasses, findClasses, findClassStubs, formatConfigs);
+            return new Config(nameSpace, baseSerialiserClassName, targetProject, findBaseClasses, findClasses, findClassStubs, formatConfigs);
         }
     }
 }
