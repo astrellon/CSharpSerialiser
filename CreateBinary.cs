@@ -10,7 +10,7 @@ namespace CSharpSerialiser
 
         public override string ReadObject => "BinaryReader";
 
-        public override string FileSuffix => "BinarySerialiser2";
+        public override string FileSuffix => "BinarySerialiser";
 
         public override IEnumerable<string> UsingImports => new []
         { "System", "System.IO", "System.Collections.Generic" };
@@ -23,7 +23,6 @@ namespace CSharpSerialiser
         #endregion
 
         #region Methods
-
         protected override void WriteBaseClassHandler(ClassBaseObject classBaseObject, ClassBaseObject.SubclassPair subclass, string castedName)
         {
             var paramName = $"{this.TrimNameSpace(subclass.Subclass.FullName)}.{classBaseObject.TypeDiscriminator.Name}";

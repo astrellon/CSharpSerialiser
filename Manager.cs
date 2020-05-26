@@ -80,10 +80,22 @@ namespace CSharpSerialiser
 
                 if (TryGetValidFieldType(field, out var fieldType))
                 {
-                    var ignore = field.GetCustomAttributes(typeof(NonSerializedAttribute), false).Any();
-                    if (ignore || field.Name == null)
+                    if (field.Name == null)
                     {
                         continue;
+                    }
+
+                    try
+                    {
+                        var ignore = field.GetCustomAttribute<NonSerializedAttribute>(true);
+                        if (ignore != null)
+                        {
+                            continue;
+                        }
+                    }
+                    catch (FileNotFoundException)
+                    {
+                        // Ignore type load exception
                     }
 
                     var classType = CreateTypeFromType(fieldType);

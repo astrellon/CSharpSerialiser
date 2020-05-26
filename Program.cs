@@ -132,7 +132,8 @@ namespace CSharpSerialiser
         {
             foreach (var assembly in AssemblyLoadContext.Default.Assemblies)
             {
-                foreach (var type in assembly.GetTypes())
+                var types = Utils.GetLoadedTypes(assembly);
+                foreach (var type in types)
                 {
                     if (string.IsNullOrWhiteSpace(type.FullName))
                     {

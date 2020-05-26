@@ -9,86 +9,55 @@ namespace CSharpSerialiser
 {
     public static partial class CSharpSerialiserJsonSerialiser
     {
-        public static void Write(Config input, Utf8JsonWriter output, bool skipStartObject = false)
+        public static void Write(Config input, Utf8JsonWriter output, bool skipStartObject)
         {
             if (!skipStartObject)
             {
                 output.WriteStartObject();
             }
+            Write(input, output);
+        }
+        
+        public static void Write(Config input, Utf8JsonWriter output)
+        {
+            output.WritePropertyName("nameSpace");
+            Write(input.NameSpace, output);
             
-            
-            output.WriteStartArray("nameSpace");
-            foreach (var item in input.NameSpace)
-            {
-                output.WriteStringValue(item);
-            }
-            output.WriteEndArray();
             output.WriteString("baseSerialiserClassName", input.BaseSerialiserClassName);
             output.WriteString("targetProject", input.TargetProject);
+            output.WritePropertyName("findBaseClasses");
+            Write(input.FindBaseClasses, output, Write);
             
-            output.WriteStartArray("findBaseClasses");
-            foreach (var item in input.FindBaseClasses)
-            {
-                Write(item, output);
-            }
-            output.WriteEndArray();
+            output.WritePropertyName("findClasses");
+            Write(input.FindClasses, output, Write);
             
-            output.WriteStartArray("findClasses");
-            foreach (var item in input.FindClasses)
-            {
-                Write(item, output);
-            }
-            output.WriteEndArray();
+            output.WritePropertyName("findClassStubs");
+            Write(input.FindClassStubs, output, Write);
             
-            output.WriteStartArray("findClassStubs");
-            foreach (var item in input.FindClassStubs)
-            {
-                Write(item, output);
-            }
-            output.WriteEndArray();
+            output.WritePropertyName("formatConfigs");
+            Write(input.FormatConfigs, output, Write);
             
-            output.WriteStartArray("formatConfigs");
-            foreach (var item in input.FormatConfigs)
-            {
-                Write(item, output);
-            }
-            output.WriteEndArray();
             output.WriteEndObject();
         }
 
         public static Config ReadConfig(JsonElement input)
         {
-            var nameSpace = new List<System.String>();
-            foreach (var value in input.GetProperty("nameSpace").EnumerateArray())
-            {
-                nameSpace.Add(value.GetString());
-            }
+            var nameSpaceJson = input.GetProperty("nameSpace");
+            var nameSpace = new List<System.String>(ReadListString(nameSpaceJson));
 
             var baseSerialiserClassName = input.GetProperty("baseSerialiserClassName").GetString();
             var targetProject = input.GetProperty("targetProject").GetString();
-            var findBaseClasses = new List<Config.FindBaseClass>();
-            foreach (var value in input.GetProperty("findBaseClasses").EnumerateArray())
-            {
-                findBaseClasses.Add(ReadConfigFindBaseClass(value));
-            }
+            var findBaseClassesJson = input.GetProperty("findBaseClasses");
+            var findBaseClasses = new List<Config.FindBaseClass>(ReadList(findBaseClassesJson, ReadConfigFindBaseClass));
 
-            var findClasses = new List<Config.FindClass>();
-            foreach (var value in input.GetProperty("findClasses").EnumerateArray())
-            {
-                findClasses.Add(ReadConfigFindClass(value));
-            }
+            var findClassesJson = input.GetProperty("findClasses");
+            var findClasses = new List<Config.FindClass>(ReadList(findClassesJson, ReadConfigFindClass));
 
-            var findClassStubs = new List<Config.FindClass>();
-            foreach (var value in input.GetProperty("findClassStubs").EnumerateArray())
-            {
-                findClassStubs.Add(ReadConfigFindClass(value));
-            }
+            var findClassStubsJson = input.GetProperty("findClassStubs");
+            var findClassStubs = new List<Config.FindClass>(ReadList(findClassStubsJson, ReadConfigFindClass));
 
-            var formatConfigs = new List<Config.FormatConfig>();
-            foreach (var value in input.GetProperty("formatConfigs").EnumerateArray())
-            {
-                formatConfigs.Add(ReadConfigFormatConfig(value));
-            }
+            var formatConfigsJson = input.GetProperty("formatConfigs");
+            var formatConfigs = new List<Config.FormatConfig>(ReadList(formatConfigsJson, ReadConfigFormatConfig));
 
             return new Config(nameSpace, baseSerialiserClassName, targetProject, findBaseClasses, findClasses, findClassStubs, formatConfigs);
         }

@@ -33,6 +33,19 @@ namespace CSharpSerialiser
                 return exp.Types.Where(t => t != null);
             }
         }
+
+        public static IEnumerable<Type> GetLoadedTypes(Assembly assembly)
+        {
+            // Ugly hack to deal with types from unknown modules.
+            try
+            {
+                return assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException exp)
+            {
+                return exp.Types.Where(t => t != null);
+            }
+        }
         #endregion
     }
 }

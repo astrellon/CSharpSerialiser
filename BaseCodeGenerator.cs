@@ -10,7 +10,7 @@ namespace CSharpSerialiser
     {
         #region Fields
         protected readonly Manager manager;
-        protected IndentedTextWriter writer { get; private set; }
+        protected IndentedTextWriter writer { get; set; }
 
         public abstract string WriteObject { get; }
         public abstract string ReadObject { get; }
@@ -26,7 +26,7 @@ namespace CSharpSerialiser
         #endregion
 
         #region Methods
-        public void SaveToFolder(string folder)
+        public virtual void SaveToFolder(string folder)
         {
             Directory.CreateDirectory(folder);
 
