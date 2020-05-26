@@ -16,7 +16,7 @@ namespace CSharpSerialiser
             "abstract", "as", "base", "bool", " break", "byte", "case", "catch", " char", "checked", "class", "const", " continue", "decimal", "default", "delegate", " do", "double", "else", "enum", " event", "explicit", "extern", "false", " finally", "fixed", "float", "for", " foreach", "goto", "if", "implicit", " in", "int", "interface", "internal", " is", "lock", "long", "namespace", " new", "null", "object", "operator", " out", "override", "params", "private", " protected", "public", "readonly", "ref", " return", "sbyte", "sealed", "short", " sizeof", "stackalloc", "static", "string", " struct", "switch", "this", "throw", " true", "try", "typeof", "uint", " ulong", "unchecked", "unsafe", "ushort", " using", "virtual", "void", "volatile", "while"
         });
 
-        public delegate void ReadFieldHandler(Manager manager, ClassField field, IndentedTextWriter writer);
+        public delegate void ReadFieldHandler(ClassField field);
         #endregion
 
         #region Methods
@@ -59,23 +59,23 @@ namespace CSharpSerialiser
             return Char.ToUpperInvariant(first) + input.Substring(1);
         }
 
-        public static string MakeGenericType(ClassType type)
+        public static string MakeGenericType(ClassType type, IReadOnlyList<string> nameSpace)
         {
             if (type.CollectionType == CollectionType.List || type.CollectionType == CollectionType.Array)
             {
-                return $"List<{MakeGenericType(type.GenericTypes[0])}>";
+                return $"List<{MakeGenericType(type.GenericTypes[0], nameSpace)}>";
             }
             else if (type.CollectionType == CollectionType.Dictionary)
             {
-                return $"Dictionary<{MakeGenericType(type.GenericTypes[0])}, {MakeGenericType(type.GenericTypes[1])}>";
+                return $"Dictionary<{MakeGenericType(type.GenericTypes[0], nameSpace)}, {MakeGenericType(type.GenericTypes[1], nameSpace)}>";
             }
 
             if (type.GenericTypes.Any())
             {
-                return string.Join(", ", type.GenericTypes.Select(MakeGenericType));
+                return string.Join(", ", type.GenericTypes.Select(t => MakeGenericType(t, nameSpace)));
             }
 
-            return type.Name.Value;
+            return type.Name.TrimNameSpace(nameSpace);
         }
 
         public static string MakeIndexIterator(int depth)
@@ -138,7 +138,7 @@ namespace CSharpSerialiser
         {
             foreach (var field in classObject.Fields)
             {
-                readFieldHandler(manager, field, writer);
+                readFieldHandler(field);
             }
 
             var finalFieldOrder = (ClassField[])null;
@@ -193,7 +193,7 @@ namespace CSharpSerialiser
 
             var ctorArgs = string.Join(", ", finalFieldOrder.Select(f => f.SafeCamelCaseName));
             var generics = CodeGeneratorUtils.CreateGenericClassString(classObject.Generics);
-            writer.WriteLine($"return new {classObject.FullName.Value}{generics}({ctorArgs});");
+            writer.WriteLine($"return new {classObject.FullName.TrimNameSpace(manager.NameSpace)}{generics}({ctorArgs});");
         }
 
         public static void WriteOuterClass(Manager manager, ClassName className, IndentedTextWriter writer, string classSuffix, IEnumerable<string> usingImports, Action writeInner)

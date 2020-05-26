@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace CSharpSerialiser
 {
@@ -20,6 +21,24 @@ namespace CSharpSerialiser
         #endregion
 
         #region Methods
+        public string TrimNameSpace(IReadOnlyList<string> nameSpace)
+        {
+            var result = this.Value;
+            foreach (var ns in nameSpace)
+            {
+                if (result.StartsWith(ns))
+                {
+                    result = result.Substring(ns.Length + 1);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return result;
+        }
+
         public bool Equals(ClassName other)
         {
             return this.Value == other.Value;

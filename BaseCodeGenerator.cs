@@ -237,7 +237,7 @@ namespace CSharpSerialiser
             var generics = CodeGeneratorUtils.CreateGenericClassString(classObject.Generics);
             var constraints = CodeGeneratorUtils.CreateGenericConstraintsString(classObject.Generics);
 
-            writer.Write($"public static {classObject.FullName.Value}{generics} {readName}{generics}({this.ReadObject} input)");
+            writer.Write($"public static {this.TrimNameSpace(classObject.FullName)}{generics} {readName}{generics}({this.ReadObject} input)");
             writer.WriteLine(constraints);
             writer.WriteLine("{");
 
@@ -249,6 +249,27 @@ namespace CSharpSerialiser
         }
 
         protected abstract void ReadClassInner(ClassObject classObject);
+
+        protected virtual string MakeReadValueMethod(ClassName className)
+        {
+            var shortName = className.TrimNameSpace(this.manager.NameSpace);
+            return "Read" + shortName;
+        }
+
+        protected virtual string MakeGenericType(ClassType classType)
+        {
+            return CodeGeneratorUtils.MakeGenericType(classType, this.manager.NameSpace);
+        }
+
+        protected virtual string TrimNameSpace(ClassName className)
+        {
+            return className.TrimNameSpace(this.manager.NameSpace);
+        }
+
+        protected virtual void WriteReadFieldsToCtor(ClassObject classObject, CodeGeneratorUtils.ReadFieldHandler readFieldHandler)
+        {
+            CodeGeneratorUtils.ReadFieldsToCtor(this.manager, classObject, this.writer, readFieldHandler);
+        }
 
         #endregion
 

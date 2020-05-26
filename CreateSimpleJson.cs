@@ -30,7 +30,7 @@ namespace CSharpSerialiser
         #region Methods
         protected override void WriteBaseClassHandler(ClassBaseObject classBaseObject, ClassBaseObject.SubclassPair subclass, string castedName)
         {
-            var paramName = $"{subclass.Subclass.FullName}.{classBaseObject.TypeDiscriminator.Name}";
+            var paramName = $"{this.TrimNameSpace(subclass.Subclass.FullName)}.{classBaseObject.TypeDiscriminator.Name}";
             writer.WriteLine($"var result = Write({castedName});");
             writer.WriteLine($"result[\"{classBaseObject.TypeDiscriminator.CamelCaseName}\"] = {paramName};");
             writer.WriteLine("return result;");
@@ -38,13 +38,13 @@ namespace CSharpSerialiser
 
         protected override void WriteClassObjectMethod(string generics, string constraints, ClassObject classObject)
         {
-            writer.Write($"public static JSONObject Write{generics}({classObject.FullName.Value}{generics} input)");
+            writer.Write($"public static JSONObject Write{generics}({this.TrimNameSpace(classObject.FullName)}{generics} input)");
             writer.WriteLine(constraints);
         }
 
         protected override void WriterClassBaseObjectMethod(string generics, string constraints, ClassBaseObject classBaseObject)
         {
-            writer.Write($"public static JSONObject Write{generics}({classBaseObject.FullName.Value}{generics} input)");
+            writer.Write($"public static JSONObject Write{generics}({this.TrimNameSpace(classBaseObject.FullName)}{generics} input)");
             writer.WriteLine(constraints);
         }
 
@@ -165,8 +165,7 @@ namespace CSharpSerialiser
 
         protected override void WriteReadBaseClassHandler(ClassBaseObject classBaseObject, ClassBaseObject.SubclassPair subclassPair)
         {
-            var shortName = CodeGeneratorUtils.GetPrimitiveName(subclassPair.Subclass.FullName);
-            writer.WriteLine($"return Read{shortName}(input);");
+            writer.WriteLine($"return {this.MakeReadValueMethod(subclassPair.Subclass.FullName)}(input);");
         }
 
         protected override void WriteReadBaseClassTypeHandler(ClassBaseObject classBaseObject)
@@ -177,7 +176,7 @@ namespace CSharpSerialiser
 
         protected override void ReadClassInner(ClassObject classObject)
         {
-            CodeGeneratorUtils.ReadFieldsToCtor(manager, classObject, writer, (manager, classField, writer) => this.ReadField(classField));
+            this.WriteReadFieldsToCtor(classObject, this.ReadField);
         }
 
         private void ReadField(ClassField classField)
@@ -199,11 +198,10 @@ namespace CSharpSerialiser
                 string jsonType;
                 if (!TryGetBasicJsonType(classType.Name, out jsonType) && manager.IsKnownClassOrBase(classType.Name))
                 {
-                    var fullName = CodeGeneratorUtils.GetPrimitiveName(classType.Name);
-                    var readName = $"Read{fullName}";
+                    var readName = this.MakeReadValueMethod(classType.Name);
                     if (classType.GenericTypes.Any())
                     {
-                        var generics = CodeGeneratorUtils.MakeGenericType(classType);
+                        var generics = this.MakeGenericType(classType);
                         return $"{readName}<{generics}>({input}.AsObject)";
                     }
                     return $"{readName}({input}.AsObject)";
@@ -226,7 +224,7 @@ namespace CSharpSerialiser
             else if (classType.CollectionType == CollectionType.List || classType.CollectionType == CollectionType.Array)
             {
                 var genericType = classType.GenericTypes.First();
-                var genericTypeName = CodeGeneratorUtils.MakeGenericType(classType);
+                var genericTypeName = this.MakeGenericType(classType);
                 var depthStr = depth == 0 ? "" : depth.ToString();
                 resultName = CodeGeneratorUtils.ToCamelCase(resultName);
                 var indexName = $"value{depthStr}";
@@ -264,7 +262,7 @@ namespace CSharpSerialiser
                 var indexName = $"prop{depthStr}";
                 var keyName = $"key{depthStr}";
                 var valueName = $"value{depthStr}";
-                var genericName = CodeGeneratorUtils.MakeGenericType(classType);
+                var genericName = this.MakeGenericType(classType);
                 resultName = CodeGeneratorUtils.ToCamelCase(resultName);
 
 

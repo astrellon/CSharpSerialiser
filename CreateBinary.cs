@@ -26,7 +26,7 @@ namespace CSharpSerialiser
 
         protected override void WriteBaseClassHandler(ClassBaseObject classBaseObject, ClassBaseObject.SubclassPair subclass, string castedName)
         {
-            var paramName = $"{subclass.Subclass.FullName}.{classBaseObject.TypeDiscriminator.Name}";
+            var paramName = $"{this.TrimNameSpace(subclass.Subclass.FullName)}.{classBaseObject.TypeDiscriminator.Name}";
             WriteFieldType(classBaseObject.TypeDiscriminator.Type, paramName, 0);
             writer.WriteLine($"Write({castedName}, output);");
         }
@@ -39,8 +39,7 @@ namespace CSharpSerialiser
 
         protected override void WriteReadBaseClassHandler(ClassBaseObject classBaseObject, ClassBaseObject.SubclassPair subclassPair)
         {
-            var shortName = CodeGeneratorUtils.GetPrimitiveName(subclassPair.Subclass.FullName);
-            writer.WriteLine($"return Read{shortName}(input);");
+            writer.WriteLine($"return {this.MakeReadValueMethod(subclassPair.Subclass.FullName)}(input);");
         }
 
         protected override void WriteReadBaseClassTypeHandler(ClassBaseObject classBaseObject)
@@ -97,7 +96,7 @@ namespace CSharpSerialiser
 
         protected override void ReadClassInner(ClassObject classObject)
         {
-            CodeGeneratorUtils.ReadFieldsToCtor(manager, classObject, writer, (manager, classField, writer) => this.ReadField(classField));
+            this.WriteReadFieldsToCtor(classObject, this.ReadField);
         }
 
         private void ReadField(ClassField classField)
@@ -117,11 +116,10 @@ namespace CSharpSerialiser
             {
                 if (manager.IsKnownClassOrBase(classType.Name))
                 {
-                    var fullName = CodeGeneratorUtils.GetPrimitiveName(classType.Name);
-                    var readName = $"Read{fullName}";
+                    var readName = this.MakeReadValueMethod(classType.Name);
                     if (classType.GenericTypes.Any())
                     {
-                        var generics = CodeGeneratorUtils.MakeGenericType(classType);
+                        var generics = this.MakeGenericType(classType);
                         return $"{readName}<{generics}>(input)";
                     }
                     return $"{readName}(input)";
@@ -141,7 +139,7 @@ namespace CSharpSerialiser
             {
                 var countName = $"count{CodeGeneratorUtils.ToTitleCase(resultName)}";
                 var genericType = classType.GenericTypes.First();
-                var genericTypeName = CodeGeneratorUtils.MakeGenericType(classType);
+                var genericTypeName = this.MakeGenericType(classType);
                 var depthStr = depth == 0 ? "" : depth.ToString();
                 var indexString = CodeGeneratorUtils.MakeIndexIterator(depth);
                 resultName = CodeGeneratorUtils.ToCamelCase(resultName);
@@ -166,7 +164,7 @@ namespace CSharpSerialiser
                 var keyName = $"key{depthStr}";
                 var valueName = $"value{depthStr}";
                 var indexName = CodeGeneratorUtils.MakeIndexIterator(depth);
-                var genericName = CodeGeneratorUtils.MakeGenericType(classType);
+                var genericName = this.MakeGenericType(classType);
                 resultName = CodeGeneratorUtils.ToCamelCase(resultName);
 
                 writer.WriteLine($"var {countName} = input.ReadInt32();");

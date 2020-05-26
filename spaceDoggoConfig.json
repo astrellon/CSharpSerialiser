@@ -1,5 +1,5 @@
 {
-    "nameSpace": ["Doggo.Serialiser"],
+    "nameSpace": ["Doggo", "Serialiser"],
     "baseSerialiserClassName": "Doggo",
     "targetProject": "/home/alan/git/space-doggo-3/Assembly-CSharp.csproj",
     "findBaseClasses": [],
