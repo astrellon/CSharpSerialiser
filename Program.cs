@@ -12,7 +12,7 @@ namespace CSharpSerialiser
     {
         static void Main(string[] args)
         {
-            using (var file = File.OpenRead("selfConfig.json"))
+            using (var file = File.OpenRead("threeDiversConfig.json"))
             {
                 var json = JsonDocument.Parse(file);
                 var config = CSharpSerialiserJsonSerialiser.ReadConfig(json.RootElement);

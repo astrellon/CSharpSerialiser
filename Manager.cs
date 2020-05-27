@@ -138,12 +138,12 @@ namespace CSharpSerialiser
 
             if (typeDiscriminatorField == null)
             {
-                throw new Exception("Unable to find type discriminator in sub class");
+                throw new Exception("Unable to find type discriminator in sub class: " + subclasses.First().FullName);
             }
 
             if (!TryGetValidFieldType(typeDiscriminatorField, out var typeDiscriminatorType))
             {
-                throw new Exception("Unable to get valid field type for type discrimination");
+                throw new Exception("Unable to get valid field type for type discrimination: " + type.FullName);
             }
 
             // Make sure that all comps have the same type discrimination and that it's on all sub classes.
@@ -240,7 +240,7 @@ namespace CSharpSerialiser
                 var result = (Type)null;
                 try
                 {
-                    if (type.IsClass && !type.IsAbstract && type.IsSubclassOf(input))
+                    if (type.IsClass && !type.IsAbstract && (type.IsSubclassOf(input) || type.GetInterfaces().Contains(input)))
                     {
                         result = type;
                     }

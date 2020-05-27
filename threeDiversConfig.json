@@ -1,11 +1,17 @@
 {
     "nameSpace": ["ThreeDivers", "Serialiser"],
-    "baseSerialiserClassName": "ThreeDivers",
+    "baseSerialiserClassName": "",
     "targetProject": "/home/alan/git/three-divers/product/common/common.csproj",
     "findBaseClasses": [
         {
             "typeNameRegex": "ThreeDivers.MapComponentData$",
-            "typeField": "ComponentType"
+            "typeField": "ComponentType",
+            "interfaceBase": ""
+        },
+        {
+            "typeNameRegex": "ThreeDivers.IMapStoreUpdate$",
+            "typeField": "UpdateType",
+            "interfaceBase": ""
         }
     ],
     "findClasses": [
