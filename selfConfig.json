@@ -5,7 +5,8 @@
     "findBaseClasses": [
         {
             "typeNameRegex": "CSharpSerialiser.Config\\+FormatConfig",
-            "typeField": "Type"
+            "typeField": "Type",
+            "interfaceBase": "CSharpSerialiser.Config\\+IFormatConfig"
         }
     ],
     "findClasses": [
@@ -15,10 +16,6 @@
     ],
     "findClassStubs": [],
     "formatConfigs": [
-        {
-            "type": "binary",
-            "outputFolder": "BinarySerialisers"
-        },
         {
             "type": "json",
             "outputFolder": "JsonSerialisers"

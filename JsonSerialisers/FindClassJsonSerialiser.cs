@@ -9,17 +9,18 @@ namespace CSharpSerialiser
 {
     public static partial class CSharpSerialiserJsonSerialiser
     {
+        public static void Write(Config.FindClass input, Utf8JsonWriter output)
+        {
+            Write(input, output, false);
+        }
+        
         public static void Write(Config.FindClass input, Utf8JsonWriter output, bool skipStartObject)
         {
             if (!skipStartObject)
             {
                 output.WriteStartObject();
             }
-            Write(input, output);
-        }
         
-        public static void Write(Config.FindClass input, Utf8JsonWriter output)
-        {
             output.WriteString("typeNameRegex", input.TypeNameRegex);
             output.WriteEndObject();
         }

@@ -28,9 +28,16 @@ namespace CSharpSerialiser
             }
         }
 
-        public abstract class FormatConfig
+        public interface IFormatConfig
+        {
+            string OutputFolder { get; }
+        }
+
+        public abstract class FormatConfig : IFormatConfig
         {
             public readonly string OutputFolder;
+
+            string IFormatConfig.OutputFolder => this.OutputFolder;
 
             public FormatConfig(string outputFolder)
             {

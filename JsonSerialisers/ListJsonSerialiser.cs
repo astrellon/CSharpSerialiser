@@ -13,7 +13,7 @@ namespace CSharpSerialiser
         public delegate void WriteJsonArrayItemHandler<T>(T item, Utf8JsonWriter writer);
         public delegate T ReadJsonArrayItemHandler<T>(JsonElement input);
 
-        public static void Write<T>(IReadOnlyList<T> input, Utf8JsonWriter writer, WriteJsonArrayItemHandler<T> itemHandler)
+        public static void Write<T>(IReadOnlyCollection<T> input, Utf8JsonWriter writer, WriteJsonArrayItemHandler<T> itemHandler)
         {
             writer.WriteStartArray();
             foreach (var item in input)
@@ -23,7 +23,7 @@ namespace CSharpSerialiser
             writer.WriteEndArray();
         }
 
-        public static void Write(IReadOnlyList<int> input, Utf8JsonWriter writer)
+        public static void Write(IReadOnlyCollection<int> input, Utf8JsonWriter writer)
         {
             writer.WriteStartArray();
             foreach (var item in input)
@@ -33,7 +33,7 @@ namespace CSharpSerialiser
             writer.WriteEndArray();
         }
 
-        public static void Write(IReadOnlyList<uint> input, Utf8JsonWriter writer)
+        public static void Write(IReadOnlyCollection<uint> input, Utf8JsonWriter writer)
         {
             writer.WriteStartArray();
             foreach (var item in input)
@@ -43,7 +43,7 @@ namespace CSharpSerialiser
             writer.WriteEndArray();
         }
 
-        public static void Write(IReadOnlyList<long> input, Utf8JsonWriter writer)
+        public static void Write(IReadOnlyCollection<long> input, Utf8JsonWriter writer)
         {
             writer.WriteStartArray();
             foreach (var item in input)
@@ -53,7 +53,7 @@ namespace CSharpSerialiser
             writer.WriteEndArray();
         }
 
-        public static void Write(IReadOnlyList<ulong> input, Utf8JsonWriter writer)
+        public static void Write(IReadOnlyCollection<ulong> input, Utf8JsonWriter writer)
         {
             writer.WriteStartArray();
             foreach (var item in input)
@@ -63,7 +63,7 @@ namespace CSharpSerialiser
             writer.WriteEndArray();
         }
 
-        public static void Write(IReadOnlyList<float> input, Utf8JsonWriter writer)
+        public static void Write(IReadOnlyCollection<float> input, Utf8JsonWriter writer)
         {
             writer.WriteStartArray();
             foreach (var item in input)
@@ -73,7 +73,7 @@ namespace CSharpSerialiser
             writer.WriteEndArray();
         }
 
-        public static void Write(IReadOnlyList<double> input, Utf8JsonWriter writer)
+        public static void Write(IReadOnlyCollection<double> input, Utf8JsonWriter writer)
         {
             writer.WriteStartArray();
             foreach (var item in input)
@@ -83,7 +83,7 @@ namespace CSharpSerialiser
             writer.WriteEndArray();
         }
 
-        public static void Write(IReadOnlyList<decimal> input, Utf8JsonWriter writer)
+        public static void Write(IReadOnlyCollection<decimal> input, Utf8JsonWriter writer)
         {
             writer.WriteStartArray();
             foreach (var item in input)
@@ -93,7 +93,7 @@ namespace CSharpSerialiser
             writer.WriteEndArray();
         }
 
-        public static void Write(IReadOnlyList<string> input, Utf8JsonWriter writer)
+        public static void Write(IReadOnlyCollection<string> input, Utf8JsonWriter writer)
         {
             writer.WriteStartArray();
             foreach (var item in input)
@@ -103,7 +103,7 @@ namespace CSharpSerialiser
             writer.WriteEndArray();
         }
 
-        public static void Write(IReadOnlyList<bool> input, Utf8JsonWriter writer)
+        public static void Write(IReadOnlyCollection<bool> input, Utf8JsonWriter writer)
         {
             writer.WriteStartArray();
             foreach (var item in input)

@@ -40,11 +40,12 @@ namespace CSharpSerialiser
         {
             writer.Write($"public static JSONObject Write{generics}({this.TrimNameSpace(classObject.FullName)}{generics} input)");
             writer.WriteLine(constraints);
+            writer.WriteLine("{");
         }
 
-        protected override void WriterClassBaseObjectMethod(string generics, string constraints, ClassBaseObject classBaseObject)
+        protected override void WriterClassBaseObjectMethod(string interfaceName, string generics, string constraints, ClassBaseObject classBaseObject)
         {
-            writer.Write($"public static JSONObject Write{generics}({this.TrimNameSpace(classBaseObject.FullName)}{generics} input)");
+            writer.Write($"public static JSONObject Write{generics}({interfaceName}{generics} input)");
             writer.WriteLine(constraints);
         }
 

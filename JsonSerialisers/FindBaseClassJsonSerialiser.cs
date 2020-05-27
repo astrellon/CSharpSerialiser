@@ -9,28 +9,30 @@ namespace CSharpSerialiser
 {
     public static partial class CSharpSerialiserJsonSerialiser
     {
+        public static void Write(Config.FindBaseClass input, Utf8JsonWriter output)
+        {
+            Write(input, output, false);
+        }
+        
         public static void Write(Config.FindBaseClass input, Utf8JsonWriter output, bool skipStartObject)
         {
             if (!skipStartObject)
             {
                 output.WriteStartObject();
             }
-            Write(input, output);
-        }
-
-        public static void Write(Config.FindBaseClass input, Utf8JsonWriter output)
-        {
+        
             output.WriteString("typeNameRegex", input.TypeNameRegex);
             output.WriteString("typeField", input.TypeField);
+            output.WriteString("interfaceBase", input.InterfaceBase);
             output.WriteEndObject();
         }
-
+        
         public static Config.FindBaseClass ReadConfigFindBaseClass(JsonElement input)
         {
             var typeNameRegex = input.GetProperty("typeNameRegex").GetString();
             var typeField = input.GetProperty("typeField").GetString();
-            var interfaceBase = input.GetProperty("interfaceBase", "");
-
+            var interfaceBase = input.GetProperty("interfaceBase").GetString();
+            
             return new Config.FindBaseClass(typeNameRegex, typeField, interfaceBase);
         }
     }

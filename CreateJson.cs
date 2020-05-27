@@ -67,6 +67,16 @@ namespace CSharpSerialiser
 
         protected override void WriteClassObjectMethod(string generics, string constraints, ClassObject classObject)
         {
+            writer.Write($"public static void Write{generics}({this.TrimNameSpace(classObject.FullName)}{generics} input, {this.WriteObject} output)");
+            writer.WriteLine(constraints);
+            writer.WriteLine("{");
+            writer.Indent++;
+            writer.WriteLine("Write(input, output, false);");
+            writer.Indent--;
+            writer.WriteLine("}");
+
+            writer.WriteLine();
+
             writer.Write($"public static void Write{generics}({this.TrimNameSpace(classObject.FullName)}{generics} input, {this.WriteObject} output, bool skipStartObject)");
             writer.WriteLine(constraints);
             writer.WriteLine("{");
@@ -78,13 +88,8 @@ namespace CSharpSerialiser
             writer.Indent--;
             writer.WriteLine("}");
 
-            writer.WriteLine("Write(input, output);");
             writer.Indent--;
-            writer.WriteLine("}");
             writer.WriteLine();
-
-            writer.Write($"public static void Write{generics}({this.TrimNameSpace(classObject.FullName)}{generics} input, {this.WriteObject} output)");
-            writer.WriteLine(constraints);
         }
 
         protected override void WriteFields(ClassObject classObject)

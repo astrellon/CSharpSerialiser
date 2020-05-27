@@ -89,7 +89,6 @@ namespace CSharpSerialiser
             var constraints = CodeGeneratorUtils.CreateGenericConstraintsString(classObject.Generics);
 
             this.WriteClassObjectMethod(generics, constraints, classObject);
-            writer.WriteLine("{");
 
             writer.Indent++;
             WriteFields(classObject);
@@ -109,7 +108,9 @@ namespace CSharpSerialiser
                 return;
             }
 
-            this.WriterClassBaseObjectMethod(generics, constraints, classBaseObject);
+            var interfaceName = this.TrimNameSpace(classBaseObject.InterfaceName.IsEmpty ? classBaseObject.FullName : classBaseObject.InterfaceName);
+
+            this.WriterClassBaseObjectMethod(interfaceName, generics, constraints, classBaseObject);
             writer.WriteLine("{");
 
             writer.Indent++;
@@ -152,11 +153,12 @@ namespace CSharpSerialiser
         {
             writer.Write($"public static void Write{generics}({this.TrimNameSpace(classObject.FullName)}{generics} input, {this.WriteObject} output)");
             writer.WriteLine(constraints);
+            writer.WriteLine("{");
         }
 
-        protected virtual void WriterClassBaseObjectMethod(string generics, string constraints, ClassBaseObject classBaseObject)
+        protected virtual void WriterClassBaseObjectMethod(string interfaceName, string generics, string constraints, ClassBaseObject classBaseObject)
         {
-            writer.Write($"public static void Write{generics}({this.TrimNameSpace(classBaseObject.FullName)}{generics} input, {this.WriteObject} output)");
+            writer.Write($"public static void Write{generics}({interfaceName}{generics} input, {this.WriteObject} output)");
             writer.WriteLine(constraints);
         }
 
