@@ -99,7 +99,7 @@ namespace CSharpSerialiser
                     }
 
                     var classType = CreateTypeFromType(fieldType);
-                    fields.Add(new ClassField(field.Name, classType));
+                    fields.Add(new ClassField(field.Name, classType, null));
                 }
             }
 
@@ -115,13 +115,15 @@ namespace CSharpSerialiser
                     if (TryGetValidParameterType(ctorField, out var fieldType))
                     {
                         var classType = CreateTypeFromType(fieldType);
-                        ctorFields.Add(new ClassField(ctorField.Name, classType));
+                        ctorFields.Add(new ClassField(ctorField.Name, classType, ctorField.DefaultValue));
                     }
                 }
             }
 
+            var fieldToCtorPairs = ClassObject.FindCtor(fields, allCtorFields);
+
             var classGenerics = CreateGenericsFromType(type);
-            return new ClassObject(new ClassName(type.FullName), fields, allCtorFields, classGenerics, baseObject);
+            return new ClassObject(new ClassName(type.FullName), fields, fieldToCtorPairs, classGenerics, baseObject);
         }
 
         public ClassBaseObject AddBaseObjectFromType(Type type, string typeDiscriminatorName, Type interfaceBase = null)
@@ -166,7 +168,7 @@ namespace CSharpSerialiser
             }
 
             var classType = CreateTypeFromType(typeDiscriminatorType);
-            var classField = new ClassField(typeDiscriminatorName, classType);
+            var classField = new ClassField(typeDiscriminatorName, classType, null);
 
             var interfaceName = ClassName.Empty;
             if (interfaceBase != null)

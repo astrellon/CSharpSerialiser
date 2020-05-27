@@ -13,10 +13,11 @@ namespace CSharpSerialiser
         public readonly string CamelCaseName;
         public readonly string SafeCamelCaseName;
         public readonly ClassType Type;
+        public readonly object DefaultValue;
         #endregion
 
         #region Constructor
-        public ClassField(string name, ClassType type)
+        public ClassField(string name, ClassType type, object defaultValue)
         {
             this.Name = name;
             this.CamelCaseName = CodeGeneratorUtils.ToCamelCase(name);
@@ -28,10 +29,9 @@ namespace CSharpSerialiser
                 this.SafeCamelCaseName = "@" + this.SafeCamelCaseName;
             }
             this.Type = type;
-        }
-        #endregion
 
-        #region Methods
+            this.DefaultValue = defaultValue;
+        }
         #endregion
     }
 }

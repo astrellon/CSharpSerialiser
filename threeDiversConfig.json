@@ -9,6 +9,7 @@
         }
     ],
     "findClasses": [
+        { "typeNameRegex": "ThreeDivers.Country$" },
         { "typeNameRegex": "ThreeDivers.+Id$" },
         { "typeNameRegex": "ThreeDivers.Latlng" },
         { "typeNameRegex": "ThreeDivers.MapNode$" },
@@ -20,7 +21,6 @@
         { "typeNameRegex": "ThreeDivers.Linescape.Terminal" }
     ],
     "findClassStubs": [
-        { "typeNameRegex": "ThreeDivers.Country$" },
         { "typeNameRegex": "System.TimeSpan" }
     ],
     "formatConfigs": [

@@ -136,57 +136,7 @@ namespace CSharpSerialiser
                 readFieldHandler(field);
             }
 
-            var finalFieldOrder = (ClassField[])null;
-            foreach (var ctorFields in classObject.CtorFields)
-            {
-                var fieldOrder = new ClassField[ctorFields.Count];
-                for (var i = 0; i < ctorFields.Count; i++)
-                {
-                    var ctorField = ctorFields[i];
-                    foreach (var field in classObject.Fields)
-                    {
-                        if (field.Name.Equals(ctorField.Name, StringComparison.OrdinalIgnoreCase))
-                        {
-                            fieldOrder[i] = field;
-                            break;
-                        }
-                    }
-                }
-
-                if (fieldOrder.Any(fo => fo == null))
-                {
-                    for (var i = 0; i < ctorFields.Count; i++)
-                    {
-                        if (fieldOrder[i] != null)
-                        {
-                            continue;
-                        }
-
-                        var ctorField = ctorFields[i];
-                        foreach (var field in classObject.Fields)
-                        {
-                            if (field.Type.Name == ctorField.Type.Name)
-                            {
-                                fieldOrder[i] = field;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (fieldOrder.All(fo => fo != null))
-                {
-                    finalFieldOrder = fieldOrder;
-                    break;
-                }
-            }
-
-            if (finalFieldOrder == null)
-            {
-                throw new Exception($"Unable to determin ctor parameters for: {classObject.FullName}");
-            }
-
-            var ctorArgs = string.Join(", ", finalFieldOrder.Select(f => f.SafeCamelCaseName));
+            var ctorArgs = string.Join(", ", classObject.CtorFields.Select(f => f.Field.SafeCamelCaseName));
             var generics = CodeGeneratorUtils.CreateGenericClassString(classObject.Generics);
             writer.WriteLine();
             writer.WriteLine($"return new {classObject.FullName.TrimNameSpace(manager.NameSpace)}{generics}({ctorArgs});");

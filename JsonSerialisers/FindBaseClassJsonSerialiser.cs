@@ -17,20 +17,21 @@ namespace CSharpSerialiser
             }
             Write(input, output);
         }
-        
+
         public static void Write(Config.FindBaseClass input, Utf8JsonWriter output)
         {
             output.WriteString("typeNameRegex", input.TypeNameRegex);
             output.WriteString("typeField", input.TypeField);
             output.WriteEndObject();
         }
-        
+
         public static Config.FindBaseClass ReadConfigFindBaseClass(JsonElement input)
         {
             var typeNameRegex = input.GetProperty("typeNameRegex").GetString();
             var typeField = input.GetProperty("typeField").GetString();
-            
-            return new Config.FindBaseClass(typeNameRegex, typeField);
+            var interfaceBase = input.GetProperty("interfaceBase", "");
+
+            return new Config.FindBaseClass(typeNameRegex, typeField, interfaceBase);
         }
     }
 }
