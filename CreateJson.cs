@@ -257,18 +257,40 @@ namespace CSharpSerialiser
 
         protected override void ReadClassInner(ClassObject classObject)
         {
-            this.WriteReadFieldsToCtor(classObject, this.ReadField);
+            this.WriteReadFieldsToCtor(classObject, (classField) => this.ReadField(classObject, classField));
         }
 
-        private void ReadField(ClassField classField)
+        private void ReadField(ClassObject classObject, ClassField classField)
         {
-            var inputField = $"input.GetProperty(\"{classField.CamelCaseName}\")";
             var varString = classField.SafeCamelCaseName;
-            var valueString = ReadFieldType(inputField, classField.Name, classField.Type, 0);
+            var ctorPair = classObject.CtorFields.FirstOrDefault(pair => pair.Field == classField);
 
-            if (varString != valueString)
+            var inputField = $"input.GetProperty(\"{classField.CamelCaseName}\")";
+
+            if (ctorPair != null && ctorPair.CtorField.HasDefaultValue)
             {
-                writer.WriteLine($"var {varString} = {valueString};");
+                inputField = classField.CamelCaseName + "Json";
+                var startingValue = $"{CodeGeneratorUtils.WriteDefaultValue(this.TrimNameSpace(ctorPair.CtorField.Type.Name), ctorPair.CtorField.DefaultValue)}";
+
+                writer.WriteLine($"var {varString} = {startingValue};");
+                writer.WriteLine($"if (input.TryGetProperty(\"{classField.CamelCaseName}\", out var {inputField}))");
+                writer.WriteLine("{");
+
+                writer.Indent++;
+                var valueString = ReadFieldType(inputField, classField.Name, classField.Type, 0);
+                writer.WriteLine($"{varString} = {valueString};");
+
+                writer.Indent--;
+                writer.WriteLine("}");
+            }
+            else
+            {
+                var valueString = ReadFieldType(inputField, classField.Name, classField.Type, 0);
+
+                if (varString != valueString)
+                {
+                    writer.WriteLine($"var {varString} = {valueString};");
+                }
             }
         }
 

@@ -167,6 +167,30 @@ namespace CSharpSerialiser
             writer.WriteLine("}");
         }
 
+        public static string WriteDefaultValue(string trimmedClassName, object input)
+        {
+            if (input == null)
+            {
+                return $"({trimmedClassName})null";
+            }
+
+            if (input is float)
+            {
+                return input.ToString() + "f";
+            }
+            if (input is Boolean inputBool)
+            {
+                return inputBool ? "true" : "false";
+            }
+
+            if (input is string)
+            {
+                return $"\"{input}\"";
+            }
+
+            return input.ToString();
+        }
+
         #endregion
     }
 }
