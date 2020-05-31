@@ -10,7 +10,7 @@ namespace CSharpSerialiser
             public readonly string TypeField;
             public readonly string InterfaceBase;
 
-            public FindBaseClass(string typeNameRegex, string typeField, string interfaceBase)
+            public FindBaseClass(string typeNameRegex, string typeField, string interfaceBase = "")
             {
                 this.TypeNameRegex = typeNameRegex;
                 this.TypeField = typeField;

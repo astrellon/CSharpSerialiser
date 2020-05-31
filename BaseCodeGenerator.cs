@@ -43,6 +43,11 @@ namespace CSharpSerialiser
 
             foreach (var classObject in manager.ClassMap.Values)
             {
+                if (classObject.IsAbstract || classObject.IsInterface)
+                {
+                    continue;
+                }
+
                 var filename = $"{CodeGeneratorUtils.GetPrimitiveName(classObject.FullName)}{this.FileSuffix}.cs";
                 var outputFile = Path.Combine(folder, filename);
 

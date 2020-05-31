@@ -25,10 +25,13 @@ namespace CSharpSerialiser
         public readonly IReadOnlyList<ClassGeneric> Generics;
         public readonly ClassBaseObject BaseObject;
         public readonly bool InlineFields;
+
+        public readonly bool IsAbstract;
+        public readonly bool IsInterface;
         #endregion
 
         #region Constructor
-        public ClassObject(ClassName fullName, IReadOnlyList<ClassField> fields, IReadOnlyList<FieldToCtorPair> ctorFields, IReadOnlyList<ClassGeneric> generics, ClassBaseObject baseObject = null, bool inlineFields = false)
+        public ClassObject(ClassName fullName, IReadOnlyList<ClassField> fields, IReadOnlyList<FieldToCtorPair> ctorFields, IReadOnlyList<ClassGeneric> generics, ClassBaseObject baseObject = null, bool inlineFields = false, bool isAbstract = false, bool isInterface = false)
         {
             this.FullName = fullName;
             this.Fields = fields;
@@ -36,6 +39,9 @@ namespace CSharpSerialiser
             this.Generics = generics;
             this.BaseObject = baseObject;
             this.InlineFields = inlineFields;
+
+            this.IsAbstract = isAbstract;
+            this.IsInterface = isInterface;
         }
         #endregion
 

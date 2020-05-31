@@ -1,0 +1,118 @@
+public delegate JSONNode WriteJsonArrayItemHandler<T>(T item);
+        public delegate T ReadJsonArrayItemHandler<T>(JSONNode input);
+
+        public static JSONArray Write<T>(IReadOnlyCollection<T> input, WriteJsonArrayItemHandler<T> itemHandler)
+        {
+            var result = new JSONArray();
+            foreach (var item in input)
+            {
+                result.Add(itemHandler(item));
+            }
+            return result;
+        }
+
+        public static JSONArray Write(IReadOnlyCollection<int> input)
+        {
+            var result = new JSONArray();
+            foreach (var item in input)
+            {
+                result.Add(item);
+            }
+            return result;
+        }
+        public static JSONArray Write(IReadOnlyCollection<uint> input)
+        {
+            var result = new JSONArray();
+            foreach (var item in input)
+            {
+                result.Add(item);
+            }
+            return result;
+        }
+        public static JSONArray Write(IReadOnlyCollection<long> input)
+        {
+            var result = new JSONArray();
+            foreach (var item in input)
+            {
+                result.Add(item);
+            }
+            return result;
+        }
+        public static JSONArray Write(IReadOnlyCollection<ulong> input)
+        {
+            var result = new JSONArray();
+            foreach (var item in input)
+            {
+                result.Add(item);
+            }
+            return result;
+        }
+        public static JSONArray Write(IReadOnlyCollection<float> input)
+        {
+            var result = new JSONArray();
+            foreach (var item in input)
+            {
+                result.Add(item);
+            }
+            return result;
+        }
+        public static JSONArray Write(IReadOnlyCollection<double> input)
+        {
+            var result = new JSONArray();
+            foreach (var item in input)
+            {
+                result.Add(item);
+            }
+            return result;
+        }
+        public static JSONArray Write(IReadOnlyCollection<string> input)
+        {
+            var result = new JSONArray();
+            foreach (var item in input)
+            {
+                result.Add(item);
+            }
+            return result;
+        }
+        public static JSONArray Write(IReadOnlyCollection<bool> input)
+        {
+            var result = new JSONArray();
+            foreach (var item in input)
+            {
+                result.Add(item);
+            }
+            return result;
+        }
+
+        public static IEnumerable<T> ReadList<T>(JSONNode input, ReadJsonArrayItemHandler<T> itemHandler)
+        {
+            foreach (var item in input.Children)
+            {
+                yield return itemHandler(item);
+            }
+        }
+
+        public static IEnumerable<string> ReadListString(JSONNode input)
+        {
+            return input.Children.Select(v => v.Value);
+        }
+        public static IEnumerable<int> ReadListInt(JSONNode input)
+        {
+            return input.Children.Select(v => v.AsInt);
+        }
+        public static IEnumerable<long> ReadListLong(JSONNode input)
+        {
+            return input.Children.Select(v => v.AsLong);
+        }
+        public static IEnumerable<float> ReadListFloat(JSONNode input)
+        {
+            return input.Children.Select(v => v.AsFloat);
+        }
+        public static IEnumerable<double> ReadListDouble(JSONNode input)
+        {
+            return input.Children.Select(v => v.AsDouble);
+        }
+        public static IEnumerable<bool> ReadListBoolean(JSONNode input)
+        {
+            return input.Children.Select(v => v.AsBool);
+        }

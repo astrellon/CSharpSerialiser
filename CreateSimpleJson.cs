@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.IO;
+using System.CodeDom.Compiler;
 
 namespace CSharpSerialiser
 {
@@ -9,7 +11,7 @@ namespace CSharpSerialiser
         #region Fields
         public override string WriteObject => "";
 
-        public override string ReadObject => "JSONObject";
+        public override string ReadObject => "JSONNode";
 
         public override string FileSuffix => "SimpleJsonSerialiser";
 
@@ -28,6 +30,31 @@ namespace CSharpSerialiser
         #endregion
 
         #region Methods
+        public override void SaveToFolder(string folder)
+        {
+            base.SaveToFolder(folder);
+
+            SaveListHandlerToFolder(folder);
+        }
+
+        protected void SaveListHandlerToFolder(string folder)
+        {
+            var filename = $"List{this.FileSuffix}.cs";
+            var outputFile = Path.Combine(folder, filename);
+
+            using (var file = File.Open(outputFile, FileMode.Create))
+            using (var streamWriter = new StreamWriter(file))
+            using (this.writer = new IndentedTextWriter(streamWriter))
+            {
+                CodeGeneratorUtils.WriteOuterClass(this.manager, new ClassName("List"), this.writer, this.FileSuffix, this.UsingImports.Concat(new []{"System.Linq"}),
+                    () =>
+                    {
+                        var template = File.ReadAllText("ListSimpleJsonTemplate.txt");
+                        this.writer.Write(template);
+                    });
+            }
+        }
+
         protected override void WriteBaseClassHandler(ClassBaseObject classBaseObject, ClassBaseObject.SubclassPair subclass, string castedName)
         {
             var paramName = $"{this.TrimNameSpace(subclass.Subclass.FullName)}.{classBaseObject.TypeDiscriminator.Name}";
@@ -79,22 +106,38 @@ namespace CSharpSerialiser
             }
             else if (classType.CollectionType == CollectionType.Array || classType.CollectionType == CollectionType.List)
             {
-                var itemName = $"item{(depth == 0 ? "" : depth.ToString())}";
-                writer.WriteLine();
-                var arrayName = $"array{CodeGeneratorUtils.ToTitleCase(paramName.Replace(".", ""))}";
+                var genericType = classType.GenericTypes.First();
 
-                writer.WriteLine($"var {arrayName} = new JSONArray();");
-                writer.WriteLine($"foreach (var {itemName} in {paramName})");
-                writer.WriteLine("{");
-                writer.Indent++;
+                if (this.manager.IsKnownClassOrBase(genericType.Name))
+                {
+                    return $"Write({paramName}, Write)";
+                }
+                else
+                {
+                    if (TryGetBasicJsonType(genericType.Name, out var jsonType))
+                    {
+                        return $"Write({paramName}, output)";
+                    }
+                    else
+                    {
+                        var itemName = $"item{(depth == 0 ? "" : depth.ToString())}";
+                        writer.WriteLine();
+                        var arrayName = $"array{CodeGeneratorUtils.ToTitleCase(paramName.Replace(".", ""))}";
 
-                var arrayValue = WriteFieldType(classType.GenericTypes.First(), itemName, depth + 1);
-                writer.WriteLine($"{arrayName}.Add({arrayValue});");
+                        writer.WriteLine($"var {arrayName} = new JSONArray();");
+                        writer.WriteLine($"foreach (var {itemName} in {paramName})");
+                        writer.WriteLine("{");
+                        writer.Indent++;
 
-                writer.Indent--;
-                writer.WriteLine("}");
+                        var arrayValue = WriteFieldType(classType.GenericTypes.First(), itemName, depth + 1);
+                        writer.WriteLine($"{arrayName}.Add({arrayValue});");
 
-                return arrayName;
+                        writer.Indent--;
+                        writer.WriteLine("}");
+
+                        return arrayName;
+                    }
+                }
             }
             else if (classType.CollectionType == CollectionType.Dictionary)
             {
@@ -228,30 +271,49 @@ namespace CSharpSerialiser
                 var genericTypeName = this.MakeGenericType(classType);
                 var depthStr = depth == 0 ? "" : depth.ToString();
                 resultName = CodeGeneratorUtils.ToCamelCase(resultName);
-                var indexName = $"value{depthStr}";
 
-                writer.WriteLine($"var {resultName} = new {genericTypeName}();");
-                writer.WriteLine($"foreach (var {indexName} in {input}.Children)");
-                writer.WriteLine("{");
-                writer.Indent++;
-
-                var readFromIter = indexName;
-
-                if (TryGetBasicJsonType(genericType.Name, out var jsonType))
+                if (manager.IsKnownClassOrBase(genericType.Name))
                 {
-                    if (jsonType != "String")
+                    var readName = this.MakeReadValueMethod(genericType.Name);
+                    if (genericType.GenericTypes.Any())
                     {
-                        readFromIter += $".As{jsonType}";
+                        var generics = this.MakeGenericType(genericType);
+                        readName += $"<{generics}>";
                     }
+
+                    writer.WriteLine($"var {resultName} = new {genericTypeName}(ReadList({input}, {readName}));");
+                }
+                else if (TryGetBasicJsonType(genericType.Name, out var readListType))
+                {
+                    writer.WriteLine($"var {resultName} = new {genericTypeName}(ReadList{readListType}({input}));");
                 }
                 else
                 {
-                    readFromIter += ".AsObject";
-                }
+                    var indexName = $"value{depthStr}";
 
-                writer.WriteLine($"{resultName}.Add({ReadFieldType(readFromIter, resultName + (depth + 1), genericType, depth + 1)});");
-                writer.Indent--;
-                writer.WriteLine("}\n");
+                    writer.WriteLine($"var {resultName} = new {genericTypeName}();");
+                    writer.WriteLine($"foreach (var {indexName} in {input}.Children)");
+                    writer.WriteLine("{");
+                    writer.Indent++;
+
+                    var readFromIter = indexName;
+
+                    if (TryGetBasicJsonType(genericType.Name, out var jsonType))
+                    {
+                        if (jsonType != "String")
+                        {
+                            readFromIter += $".As{jsonType}";
+                        }
+                    }
+                    else
+                    {
+                        readFromIter += ".AsObject";
+                    }
+
+                    writer.WriteLine($"{resultName}.Add({ReadFieldType(readFromIter, resultName + (depth + 1), genericType, depth + 1)});");
+                    writer.Indent--;
+                    writer.WriteLine("}\n");
+                }
 
                 return resultName;
             }

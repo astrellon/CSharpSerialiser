@@ -123,7 +123,7 @@ namespace CSharpSerialiser
             var fieldToCtorPairs = ClassObject.FindCtor(fields, allCtorFields);
 
             var classGenerics = CreateGenericsFromType(type);
-            return new ClassObject(new ClassName(type.FullName), fields, fieldToCtorPairs, classGenerics, baseObject);
+            return new ClassObject(new ClassName(type.FullName), fields, fieldToCtorPairs, classGenerics, baseObject, isAbstract: type.IsAbstract, isInterface: type.IsInterface);
         }
 
         public ClassBaseObject AddBaseObjectFromType(Type type, string typeDiscriminatorName, Type interfaceBase = null)
