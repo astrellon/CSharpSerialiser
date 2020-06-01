@@ -4,8 +4,20 @@
     "targetProject": "/home/alan/git/space-doggo-3/Assembly-CSharp.csproj",
     "findBaseClasses": [
         {
-            "typeNameRegex": "Doggo.CelestialBodyDefinition2$",
+            "typeNameRegex": "Doggo.CelestialBodyDefinition$",
             "typeField": "BodyType"
+        },
+        {
+            "typeNameRegex": "Doggo.PlaceableItem$",
+            "typeField": "ItemType"
+        },
+        {
+            "typeNameRegex": "Doggo.Equipment$",
+            "typeField": "ItemType"
+        },
+        {
+            "typeNameRegex": "Doggo.IItem$",
+            "typeField": "ItemType"
         }
     ],
     "findClasses": [
@@ -15,6 +27,12 @@
         { "typeNameRegex": "^Doggo.+Location$" },
         { "typeNameRegex": "^Doggo.+Definition2$" },
         { "typeNameRegex": "^Doggo.UnityObjectDefinition" },
+        { "typeNameRegex": "^Doggo.GameSession$" },
+        { "typeNameRegex": "^Doggo.Ship$" },
+        { "typeNameRegex": "^Doggo.Character$" },
+        { "typeNameRegex": "^Doggo.WalkableArea$" },
+        { "typeNameRegex": "^Doggo.PositionItem$" },
+        { "typeNameRegex": "^Doggo.Inventory$" },
         { "typeNameRegex": "^Doggo.+Id$" }
     ],
     "findClassStubs": [],

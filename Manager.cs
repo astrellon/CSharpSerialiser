@@ -211,7 +211,9 @@ namespace CSharpSerialiser
                 {
                     containerType = CollectionType.Array;
                 }
-                else if (genericDef.IsAssignableFrom(typeof(IReadOnlyDictionary<,>)))
+                else if (genericDef.IsAssignableFrom(typeof(IReadOnlyDictionary<,>)) ||
+                    genericDef.IsAssignableFrom(typeof(IDictionary<,>)) ||
+                    genericDef.IsAssignableFrom(typeof(Dictionary<,>)))
                 {
                     containerType = CollectionType.Dictionary;
                 }
