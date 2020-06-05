@@ -25,6 +25,7 @@
         { "typeNameRegex": "UnityEngine.Vector3$" },
         { "typeNameRegex": "^Doggo.+Definition$" },
         { "typeNameRegex": "^Doggo.+Location$" },
+        { "typeNameRegex": "^Doggo.Dialogue$" },
         { "typeNameRegex": "^Doggo.+Definition2$" },
         { "typeNameRegex": "^Doggo.UnityObjectDefinition" },
         { "typeNameRegex": "^Doggo.GameSession$" },

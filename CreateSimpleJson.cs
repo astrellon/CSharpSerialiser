@@ -116,7 +116,7 @@ namespace CSharpSerialiser
                 {
                     if (TryGetBasicJsonType(genericType.Name, out var jsonType))
                     {
-                        return $"Write({paramName}, output)";
+                        return $"Write({paramName})";
                     }
                     else
                     {
